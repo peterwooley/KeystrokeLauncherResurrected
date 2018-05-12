@@ -1,0 +1,10 @@
+## Interface: 70300
+## Title: Keystroke Launcher
+## Notes: A simple keystroke launcher for macros, spells, addons and items. Press ctrl+alt to activate.
+## Author: endymonium@gmail.com
+## Version: 0.5
+## SavedVariables: KeystrokeLauncherDB
+
+embeds.xml
+Locales\Locales.xml
+Core.lua
