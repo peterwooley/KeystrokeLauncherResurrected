@@ -185,58 +185,81 @@ function KeystrokeLauncher:OnDisable()
 end
 
 function draw_gui(self)
-    CreateFrame("Frame", "MainFrame", UIParent, "BasicFrameTemplate")
-    MainFrame:SetSize(600, 150)
-    MainFrame:SetPoint("CENTER")
-    
-    -- local b = CreateFrame("Button", "MyButton", MainFrame, "UIPanelButtonTemplate")
-    -- b:SetSize(80 ,22) -- width, height
-    -- b:SetText("Button!")
-    -- b:SetPoint("CENTER")
-    -- b:SetScript("OnClick", function()
-    --     print("I'm in your buttonz")
-    -- end)
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle("Keystroke Launcher")
+    frame:SetStatusText(nil)
+    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
+    frame:SetLayout("Flow")
+    frame:SetWidth(400)
+    frame:SetHeight(300)
 
-    local data = {
-        { "r1c1", "r1c2", "r1c3" },
-        { "hello world", "row 2 cell 2", "10" },
-     }
-    local rowFrames = {}
+    local editbox = AceGUI:Create("EditBox")
+    editbox:SetFullWidth(true)
+    editbox:SetFocus()
+    frame:AddChild(editbox)
 
-    for i = 1, 2 do
-        local row = CreateFrame("Button", nil, MainFrame, "UIPanelButtonTemplate")
-        row:SetWidth(MainFrame:GetWidth())
-        if i == 1 then
-            row:SetPoint("TOPLEFT", MainFrame)
-        else
-            row:SetPoint("TOPLEFT", rowFrames[i - 1], "BOTTOMLEFT")
-        end
+    scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    scrollcontainer:SetFullWidth(true)
+    scrollcontainer:SetFullHeight(true) -- probably?
+    scrollcontainer:SetLayout("Fill") -- important!
 
-        row.cells = {}
-        for j = 1, 3 do
-            local cell = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            cell:SetWidth(MainFrame:GetWidth() / 3)
-            cell:SetJustifyH("LEFT")
-            if j == 1 then
-                cell:SetPoint("LEFT", row)
-            else
-                cell:SetPoint("LEFT", row.cells[j - 1], "RIGHT")
-            end
-            row.cells[j] = cell
-        end
-        rowFrames[i] = row
+    frame:AddChild(scrollcontainer)
+
+    scroll = AceGUI:Create("ScrollFrame")
+    scroll:SetLayout("Flow") -- probably?
+    scrollcontainer:AddChild(scroll)
+
+    for key, val in pairs(self.db.char.searchDataTable) do
+        local label = AceGUI:Create("InteractiveLabel")
+        label:SetText(key)
+        label:SetWidth(200)
+        label:SetCallback("OnClick", function()
+            self:Print(key)
+        end)
+        scroll:AddChild(label)
     end
 
-    for i, row in ipairs(data) do
-        local rowFrame = rowFrames[i]
-        for j, cell in ipairs(row) do
-            local cellFontString = rowFrame.cells[j]
-            cellFontString:SetText(cell)
-            print(cell)
-        end
-    end
 
+    -- CreateFrame("Frame", "MainFrame", UIParent, "BasicFrameTemplate")
+    -- MainFrame:SetSize(600, 150)
+    -- MainFrame:SetPoint("CENTER")
     
+    -- local data = format_search_data_table(self)
+    -- local rowFrames = {}
+
+    -- for i = 1, #data do
+    --     local row = CreateFrame("Button", nil, MainFrame, "UIPanelButtonTemplate")
+    --     row:SetWidth(MainFrame:GetWidth())
+    --     if i == 1 then
+    --         row:SetPoint("TOPLEFT", MainFrame)
+    --     else
+    --         row:SetPoint("TOPLEFT", rowFrames[i - 1], "BOTTOMLEFT")
+    --     end
+
+    --     row.cells = {}
+    --     for j = 1, 3 do
+    --         local cell = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    --         cell:SetWidth(MainFrame:GetWidth() / 3)
+    --         cell:SetJustifyH("LEFT")
+    --         if j == 1 then
+    --             cell:SetPoint("LEFT", row)
+    --         else
+    --             cell:SetPoint("LEFT", row.cells[j - 1], "RIGHT")
+    --         end
+    --         row.cells[j] = cell
+    --     end
+    --     rowFrames[i] = row
+    -- end
+
+    -- for i, row in ipairs(data) do
+    --     local rowFrame = rowFrames[i]
+    --     for j, cell in ipairs(row) do
+    --         local cellFontString = rowFrame.cells[j]
+    --         cellFontString:SetText(cell)
+    --     end
+    -- end
+
+    -- MainFrame:Show()
 end
 
 function format_search_data_table(self)
