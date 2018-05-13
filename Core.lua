@@ -79,17 +79,6 @@ function KeystrokeLauncher:OnInitialize()
                     },
                 },
             },
-            -- show = {
-            --     name = "show",
-            --     type = "group",
-            --     args = {
-            --         search_table = {
-            --             name = "search_table",
-            --             type = "execute",
-            --             func = function() self:Print(dump(self.db.char.db_search)) end
-            --         }
-            --     }
-            -- }
             search_table = {
                 name = "search_table",
                 type = "group",
@@ -113,7 +102,7 @@ function KeystrokeLauncher:OnInitialize()
     AceConfigDialog:AddToBlizOptions("KeystrokeLauncher")
 
     --[=====[ GLOBAL KEYBOARD LISTENER --]=====]
-    local KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
+    KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
     KeyboardListenerFrame:EnableKeyboard(true)
     KeyboardListenerFrame:SetPropagateKeyboardInput(true)
     KeyboardListenerFrame:SetScript("OnKeyDown", function(self2, key)
@@ -157,19 +146,6 @@ function KeystrokeLauncher:OnInitialize()
                 draw_gui(self)
             end
         end
-        -- if IsControlKeyDown() and IsAltKeyDown() then
-        --     if InCombatLockdown() then
-        --         log('cannot start when in Combat.')
-        --     else
-        --         -- set default values. Order is important, must be before frame is shown.
-        --         UP_DOWN_PRESSED = false
-        --         RESULTBOX_POSITION = -1
-                
-        --         SearchEditBox:SetPropagateKeyboardInput(key=='ENTER')
-        --         show_frames()
-        --         set_shortcut_bindings() 
-        --     end
-        -- end
     end)
 
     --[=====[ FILL SEARCH DATABASE --]=====]
@@ -187,94 +163,67 @@ end
 function draw_gui(self)
     local frame = AceGUI:Create("Frame")
     frame:SetTitle("Keystroke Launcher")
-    frame:SetStatusText(nil)
     frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
     frame:SetLayout("Flow")
     frame:SetWidth(400)
     frame:SetHeight(300)
 
+    -- search field
     local editbox = AceGUI:Create("EditBox")
     editbox:SetFullWidth(true)
     editbox:SetFocus()
     frame:AddChild(editbox)
 
+    -- scroll framge
     scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
-    scrollcontainer:SetFullHeight(true) -- probably?
-    scrollcontainer:SetLayout("Fill") -- important!
+    scrollcontainer:SetFullHeight(true)
+    scrollcontainer:SetLayout("Fill")
 
     frame:AddChild(scrollcontainer)
 
     scroll = AceGUI:Create("ScrollFrame")
-    scroll:SetLayout("Flow") -- probably?
+    scroll:SetLayout("Flow")
     scrollcontainer:AddChild(scroll)
 
+    -- the data
+    SEARCH_TABLE_TO_LABEL = {}
     for key, val in pairs(self.db.char.searchDataTable) do
         local label = AceGUI:Create("InteractiveLabel")
         label:SetText(key)
         label:SetWidth(200)
-        label:SetCallback("OnClick", function()
-            self:Print(key)
+        label:SetUserData("orig_text", key)
+        label:SetCallback("OnClick", function() 
+            select_label(key)
+            self:Print(val['slash_cmd'])
+            edit_master_marco(frame, val['slash_cmd'])
         end)
         scroll:AddChild(label)
+        SEARCH_TABLE_TO_LABEL[key] = label
     end
-
-
-    -- CreateFrame("Frame", "MainFrame", UIParent, "BasicFrameTemplate")
-    -- MainFrame:SetSize(600, 150)
-    -- MainFrame:SetPoint("CENTER")
-    
-    -- local data = format_search_data_table(self)
-    -- local rowFrames = {}
-
-    -- for i = 1, #data do
-    --     local row = CreateFrame("Button", nil, MainFrame, "UIPanelButtonTemplate")
-    --     row:SetWidth(MainFrame:GetWidth())
-    --     if i == 1 then
-    --         row:SetPoint("TOPLEFT", MainFrame)
-    --     else
-    --         row:SetPoint("TOPLEFT", rowFrames[i - 1], "BOTTOMLEFT")
-    --     end
-
-    --     row.cells = {}
-    --     for j = 1, 3 do
-    --         local cell = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    --         cell:SetWidth(MainFrame:GetWidth() / 3)
-    --         cell:SetJustifyH("LEFT")
-    --         if j == 1 then
-    --             cell:SetPoint("LEFT", row)
-    --         else
-    --             cell:SetPoint("LEFT", row.cells[j - 1], "RIGHT")
-    --         end
-    --         row.cells[j] = cell
-    --     end
-    --     rowFrames[i] = row
-    -- end
-
-    -- for i, row in ipairs(data) do
-    --     local rowFrame = rowFrames[i]
-    --     for j, cell in ipairs(row) do
-    --         local cellFontString = rowFrame.cells[j]
-    --         cellFontString:SetText(cell)
-    --     end
-    -- end
-
-    -- MainFrame:Show()
+   
+    frame:Show()
 end
 
-function format_search_data_table(self)
-    data = {}
-    for key, val in pairs(self.db.char.searchDataTable) do
-        table.insert(data, { key })
+function edit_master_marco(frame, body, key)
+    macroId = get_or_create_maco('kl-master')
+
+    if not key then
+        key = 'ENTER'
     end
 
-    -- for i, row in ipairs(data) do
-    --     for j, cell in ipairs(row) do
-    --        print("Row", i, "cell", j, "contains", tostring(cell))
-    --     end
-    --  end
+    EditMacro(macroId, nil, nil, body, 1, 1); 
+    SetOverrideBindingMacro(KeyboardListenerFrame, true, key, macroId)
+end
 
-    return data
+function select_label(key)
+    for k, label in pairs(SEARCH_TABLE_TO_LABEL) do
+        if k == key then
+            label:SetText(label:GetUserData("orig_text") ..' (selected)')
+        else
+            label:SetText(label:GetUserData("orig_text"))
+        end
+    end
 end
 
 function fill_search_data_table(self)
@@ -331,7 +280,7 @@ function fill_search_data_table(self)
             if not IsPassiveSpell(spellName) then
                 spellString, spellname = item_link_to_string(GetSpellLink(spellName))
                 icon_spell_name = "|T"..GetSpellTexture(spellName)..":16|t "..spellName
-                db_search[icon_spell_name] = {slash_cmd=spellName, is_spell=true, tooltipItemString=spellString}
+                db_search[icon_spell_name] = {slash_cmd="/cast "..spellName, is_spell=true, tooltipItemString=spellString}
             end
         end
 
