@@ -161,32 +161,50 @@ function KeystrokeLauncher:OnDisable()
 end
 
 function draw_gui(self)
-    local frame = AceGUI:Create("Frame")
-    frame:SetTitle("Keystroke Launcher")
-    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
-    frame:SetLayout("Flow")
-    frame:SetWidth(400)
-    frame:SetHeight(300)
+    local KL_MAIN_FRAME = AceGUI:Create("Frame")
+    KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
+    KL_MAIN_FRAME:SetCallback("OnClose", 
+        function(widget) AceGUI:Release(widget) 
+        C_Timer.After(0.1, function() 
+            self:Print("Keybinding cleared")
+            ClearOverrideBindings(KeyboardListenerFrame) 
+        end)
+    end)
+    KL_MAIN_FRAME:SetLayout("Flow")
+    KL_MAIN_FRAME:SetWidth(400)
+    KL_MAIN_FRAME:SetHeight(300)
 
     -- search field
     local editbox = AceGUI:Create("EditBox")
     editbox:SetFullWidth(true)
     editbox:SetFocus()
-    frame:AddChild(editbox)
+    editbox:SetCallback("OnTextChanged", function(arg1, arg2, value)
+        filter_results(value)
+    end)
+    KL_MAIN_FRAME:AddChild(editbox)
 
     -- scroll framge
-    scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
     scrollcontainer:SetFullHeight(true)
     scrollcontainer:SetLayout("Fill")
 
-    frame:AddChild(scrollcontainer)
+    KL_MAIN_FRAME:AddChild(scrollcontainer)
 
     scroll = AceGUI:Create("ScrollFrame")
     scroll:SetLayout("Flow")
     scrollcontainer:AddChild(scroll)
+    
+    -- KL_MAIN_FRAME:SetPropagateKeyboardInput(key=='BUTTON1')
+    -- scrollcontainer:SetPropagateKeyboardInput(key=='BUTTON1')
 
-    -- the data
+    --[=====[ SHOW RESULTS --]=====]
+    show_results()
+   
+    KL_MAIN_FRAME:Show()
+end
+
+function show_results()
     SEARCH_TABLE_TO_LABEL = {}
     for key, val in pairs(self.db.char.searchDataTable) do
         local label = AceGUI:Create("InteractiveLabel")
@@ -195,17 +213,25 @@ function draw_gui(self)
         label:SetUserData("orig_text", key)
         label:SetCallback("OnClick", function() 
             select_label(key)
-            self:Print(val['slash_cmd'])
-            edit_master_marco(frame, val['slash_cmd'])
+            edit_master_marco(val['slash_cmd'], 'BUTTON1')
+            --KL_MAIN_FRAME:Close()
         end)
         scroll:AddChild(label)
         SEARCH_TABLE_TO_LABEL[key] = label
     end
-   
-    frame:Show()
 end
 
-function edit_master_marco(frame, body, key)
+function filter_results(filter)
+    for key, val in pairs(SEARCH_TABLE_TO_LABEL) do
+        if key:match(filter) then
+            val:Show()
+        else
+            val:Hide()
+        end
+    end
+end
+
+function edit_master_marco(body, key)
     macroId = get_or_create_maco('kl-master')
 
     if not key then
