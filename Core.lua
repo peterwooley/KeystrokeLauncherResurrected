@@ -200,12 +200,6 @@ function check_key_bindings(self)
     return false
 end
 
-function move_selector(key)
-    if key == "UP" then
-    elseif key == "DOWN" then
-    end
-end
-
 function show_main_frame(self)
     KL_MAIN_FRAME = AceGUI:Create("Frame")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
@@ -233,10 +227,11 @@ function show_main_frame(self)
     searchEditbox:DisableButton(true)
     searchEditbox.editbox:SetPropagateKeyboardInput(false)
     searchEditbox.editbox:SetScript("OnKeyDown", function(self, key)
-        move_selector(key)
         if key == 'ENTER' then
             searchEditbox.editbox:SetPropagateKeyboardInput(key=='ENTER')
             KL_MAIN_FRAME:Release()
+        else
+            move_selector(key) 
         end
     end)
     searchEditbox.editbox:SetScript("OnEscapePressed", function(self) 
@@ -285,11 +280,11 @@ function show_results(self, filter)
                 edit_master_marco(self, val['slash_cmd'])
             end)
             scroll:AddChild(label)
-            SEARCH_TABLE_TO_LABEL[key] = label
+            table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})
             -- the first entry is always the one we want to execute per default
             if counter == 0 then
                 edit_master_marco(self, val['slash_cmd'])
-                --select_label(key)
+                select_label(key)
             end
             counter = counter + 1
         end
@@ -306,12 +301,33 @@ function edit_master_marco(self, body, key)
     self:Print(key.." executes: "..body)
 end
 
-function select_label(key)
-    for k, label in pairs(SEARCH_TABLE_TO_LABEL) do
-        if k == key then
-            label:SetText(label:GetUserData("orig_text") ..' (selected)')
+function move_selector(key)
+    -- but only down and up to the min and max boundaries
+    if key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
+        select_label_index(CURRENTLY_SELECTED_LABEL_INDEX-1)
+    elseif key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
+        select_label_index(CURRENTLY_SELECTED_LABEL_INDEX+1)
+    end
+end
+
+function select_label_index(index)
+    for k, v in pairs(SEARCH_TABLE_TO_LABEL) do
+        if index == k then
+            v.label:SetText(v.label:GetUserData("orig_text") ..' (sel)'..k)
+            CURRENTLY_SELECTED_LABEL_INDEX = k
         else
-            label:SetText(label:GetUserData("orig_text"))
+            v.label:SetText(v.label:GetUserData("orig_text")..k)
+        end
+    end
+end
+
+function select_label(key)
+    for k, v in pairs(SEARCH_TABLE_TO_LABEL) do
+        if v.key == key then
+            v.label:SetText(v.label:GetUserData("orig_text") ..' (sel)'..k)
+            CURRENTLY_SELECTED_LABEL_INDEX = k
+        else
+            v.label:SetText(v.label:GetUserData("orig_text")..k)
         end
     end
 end
