@@ -8,6 +8,14 @@ function KeystrokeLauncher:OnInitialize()
     if self.db.char.keybindingModifiers == nil then
         self.db.char.keybindingModifiers = {}
     end
+    if not SEARCH_TABLE_INIT_DONE then
+        -- C_Timer.After(2, function() 
+        fill_search_data_table(self)
+        SEARCH_TABLE_INIT_DONE = true
+        -- end)
+    end
+    -- self.db.char.searchDataTable = {}
+    -- print("INIT")
 
     --[=====[ SLASH COMMANDS/ CONFIG OPTIONS --]=====]
     local options = {
@@ -111,25 +119,27 @@ function KeystrokeLauncher:OnInitialize()
     KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
     KeyboardListenerFrame:EnableKeyboard(true)
     KeyboardListenerFrame:SetPropagateKeyboardInput(true)
-    KeyboardListenerFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    KeyboardListenerFrame:SetScript("OnEvent", function(self, event)
-        -- without the delay, the items in the bag are not found. Seems like this event is triggered to early.
-        -- C_Timer.After(2, function() 
-        --     self:Print('ENTER')
-        --     DATA_REFRESHED = true
-        -- end)
-        -- print("ENTER2")
-        -- fill_search_data_table(self)
-    end)
+    -- KeyboardListenerFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    -- KeyboardListenerFrame:SetScript("OnEvent", function(self, event)
+    -- --     -- without the delay, the items in the bag are not found. Seems like this event is triggered to early.
+    -- --     -- C_Timer.After(2, function() 
+    -- --     --     self:Print('ENTER')
+    -- --     --     DATA_REFRESHED = true
+    -- --     -- end)
+        
+    --     if not SEARCH_TABLE_INIT_DONE then
+    --         C_Timer.After(2, function() 
+    --             fill_search_data_table(self)
+    --             SEARCH_TABLE_INIT_DONE = true
+    --         end)
+    --     end
+    -- end)
     KeyboardListenerFrame:SetScript("OnKeyDown", function(self2, key)
         if check_key_bindings(self) then
             show_main_frame(self)
             show_results(self)
         end
     end)
-    KeyboardListenerFrame:SetScript("OnEscapePressed", function(self)
-        print("ESCAPE")
-    end
 
     --[=====[ FILL SEARCH DATABASE --]=====]
     --fill_search_data_table(self)
@@ -190,6 +200,12 @@ function check_key_bindings(self)
     return false
 end
 
+function move_selector(key)
+    if key == "UP" then
+    elseif key == "DOWN" then
+    end
+end
+
 function show_main_frame(self)
     KL_MAIN_FRAME = AceGUI:Create("Frame")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
@@ -205,52 +221,57 @@ function show_main_frame(self)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(400)
     KL_MAIN_FRAME:SetHeight(300)
-    --KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
+    KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(self, key)
+        KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(key=='ENTER')
+        move_selector(key)
+    end) 
 
-    -- search field
-    local editbox = AceGUI:Create("EditBox")
-    editbox:SetFullWidth(true)
-    editbox:SetFocus()
-    editbox:DisableButton(true)
-    -- editbox.frame:SetScript("OnEscapePressed", function(self)
-    --     print("esc")
-    -- end)
-    -- editbox.frame:SetPropagateKeyboardInput(true)
-    editbox:SetCallback("OnTextChanged", function(arg1, arg2, value)
+    -- search edit box
+    local searchEditbox = AceGUI:Create("EditBox")
+    searchEditbox:SetFullWidth(true)
+    searchEditbox:SetFocus()
+    searchEditbox:DisableButton(true)
+    searchEditbox.editbox:SetPropagateKeyboardInput(false)
+    searchEditbox.editbox:SetScript("OnKeyDown", function(self, key)
+        move_selector(key)
+        if key == 'ENTER' then
+            searchEditbox.editbox:SetPropagateKeyboardInput(key=='ENTER')
+            KL_MAIN_FRAME:Release()
+        end
+    end)
+    searchEditbox.editbox:SetScript("OnEscapePressed", function(self) 
+        KL_MAIN_FRAME:Release() 
+    end)
+    searchEditbox:SetCallback("OnTextChanged", function(arg1, arg2, value)
         show_results(self, value)
     end)
-    editbox:SetCallback("OnEnterPressed", function(arg1, arg2, value)
-        editbox.frame:SetPropagateKeyboardInput(key=='ENTER')
-        KL_MAIN_FRAME:Release()
-    end)
-    KL_MAIN_FRAME:AddChild(editbox)
+    -- searchEditbox:SetCallback("OnEnterPressed", function(arg1, arg2, value)
+    --     searchEditbox.editbox:SetPropagateKeyboardInput(true)
+    --     KL_MAIN_FRAME:Release()
+    -- end)
+    KL_MAIN_FRAME:AddChild(searchEditbox)
 
-    -- scroll framge
+    -- scroll container/ group
     local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
     scrollcontainer:SetFullHeight(true)
     scrollcontainer:SetLayout("Fill")
-    -- scrollcontainer.frame:SetPropagateKeyboardInput(true)
-
     KL_MAIN_FRAME:AddChild(scrollcontainer)
 
+    -- scroll frame
     scroll = AceGUI:Create("ScrollFrame")
     scroll:SetLayout("Flow")
-    -- scroll.frame:SetPropagateKeyboardInput(true)
     scrollcontainer:AddChild(scroll)
-    
-    -- KL_MAIN_FRAME:SetPropagateKeyboardInput(key=='BUTTON1')
-    -- scrollcontainer:SetPropagateKeyboardInput(key=='BUTTON1')
 
-    --[=====[ SHOW RESULTS --]=====]
-    --show_results()
-   
     KL_MAIN_FRAME:Show()
 end
 
 function show_results(self, filter)
+    if filter == nil then
+        filter = '' -- :find cant handle nil
+    end
     SEARCH_TABLE_TO_LABEL = {}
-    scroll:ReleaseChildren()
+    scroll:ReleaseChildren() -- clear all and start from fresh
     local counter = 0
     for key, val in pairs(self.db.char.searchDataTable) do
         if key:lower():find(filter) then
@@ -259,15 +280,16 @@ function show_results(self, filter)
             label:SetWidth(200)
             label:SetUserData("orig_text", key)
             label:SetCallback("OnClick", function() 
+                -- cant propagate mouse clicks, so need to press enter after selecting
                 select_label(key)
-                edit_master_marco(self, val['slash_cmd'], 'BUTTON1')
-                KL_MAIN_FRAME:Release()
+                edit_master_marco(self, val['slash_cmd'])
             end)
             scroll:AddChild(label)
             SEARCH_TABLE_TO_LABEL[key] = label
             -- the first entry is always the one we want to execute per default
             if counter == 0 then
                 edit_master_marco(self, val['slash_cmd'])
+                --select_label(key)
             end
             counter = counter + 1
         end
@@ -298,12 +320,15 @@ function fill_search_data_table(self)
     self.db.char.searchDataTable = {}
     local db_search = self.db.char.searchDataTable
     for i=1, GetNumAddOns() do 
-        name, title, notes, enabled = GetAddOnInfo(i) 
+        name, title, notes, enabled = GetAddOnInfo(i)
+        if notes == nil then
+            notes = ''
+        end 
         if enabled and IsAddOnLoaded(i) then
             local slash_cmd = '/'..name:lower()
             -- only add if slash command exists
             if slash_cmd_exists(slash_cmd) then
-                db_search[name] = {slash_cmd=slash_cmd, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+                db_search[name] = {slash_cmd="/"..slash_cmd, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
             else
                 -- no slash command exists, let's see if we can find something in _G['SLASH_...']
                 for k, v in pairs(_G) do

@@ -178,7 +178,7 @@ local function Constructor()
 	local frame = CreateFrame("Frame", nil, UIParent)
 	frame:Hide()
 
-	frame:SetPropagateKeyboardInput(true)
+	--frame:SetPropagateKeyboardInput(true)
 
 	frame:EnableMouse(true)
 	frame:SetMovable(true)

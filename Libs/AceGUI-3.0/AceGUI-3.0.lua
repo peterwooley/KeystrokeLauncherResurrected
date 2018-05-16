@@ -527,8 +527,6 @@ do
 		widget.frame.obj = widget
 		widget.content:SetScript("OnSizeChanged", ContentResize)
 		widget.frame:SetScript("OnSizeChanged", FrameResize)
-		widget.frame:SetPropagateKeyboardInput(true)
-		print("blub")
 		setmetatable(widget, {__index = WidgetContainerBase})
 		widget:SetLayout("List")
 		return widget
@@ -542,7 +540,6 @@ do
 		widget.base = WidgetBase
 		widget.frame.obj = widget
 		widget.frame:SetScript("OnSizeChanged", FrameResize)
-		widget.frame:SetPropagateKeyboardInput(true)
 		setmetatable(widget, {__index = WidgetBase})
 		return widget
 	end
