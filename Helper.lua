@@ -41,3 +41,11 @@ function get_or_create_maco(name)
     end
     return macroId
 end
+
+function is_nil_or_empty(val) 
+    if val == nil or val == '' then
+        return true
+    else
+        return false
+    end
+end

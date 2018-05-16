@@ -156,6 +156,7 @@ do
 	
 	local function Constructor()
 		local frame = CreateFrame("Frame",nil,UIParent)
+		frame:SetPropagateKeyboardInput(true)
 		local self = {}
 		self.type = "Window"
 		

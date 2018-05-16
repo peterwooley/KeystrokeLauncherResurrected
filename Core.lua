@@ -1,4 +1,4 @@
-KeystrokeLauncher = LibStub("AceAddon-3.0"):NewAddon("KeystrokeLauncher", "AceConsole-3.0")
+ KeystrokeLauncher = LibStub("AceAddon-3.0"):NewAddon("KeystrokeLauncher", "AceConsole-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("KeystrokeLauncher")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
@@ -94,7 +94,13 @@ function KeystrokeLauncher:OnInitialize()
                         func = function() fill_search_data_table(self) end
                     }
                 }
-            }
+            },
+            -- close = {
+            --     name = "close",
+            --     type = "execute",
+            --     func = function() KL_MAIN_FRAME:Release() end
+            -- }
+
         }
     }
     options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db) -- enable profiles
@@ -105,51 +111,28 @@ function KeystrokeLauncher:OnInitialize()
     KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
     KeyboardListenerFrame:EnableKeyboard(true)
     KeyboardListenerFrame:SetPropagateKeyboardInput(true)
+    KeyboardListenerFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    KeyboardListenerFrame:SetScript("OnEvent", function(self, event)
+        -- without the delay, the items in the bag are not found. Seems like this event is triggered to early.
+        -- C_Timer.After(2, function() 
+        --     self:Print('ENTER')
+        --     DATA_REFRESHED = true
+        -- end)
+        -- print("ENTER2")
+        -- fill_search_data_table(self)
+    end)
     KeyboardListenerFrame:SetScript("OnKeyDown", function(self2, key)
-        -- collect currently pressed buttons
-        local pressedButtons = {}
-        if not table.contains({"LALT", "LCTRL"}, key) then
-            table.insert(pressedButtons, key)
-        end
-        if IsControlKeyDown() then
-            table.insert(pressedButtons, "ctrl")
-        end
-        if IsAltKeyDown() then
-            table.insert(pressedButtons, "alt")
-        end
-        
-        -- format configured keybindings
-        local mergedKeybindings = {}
-        table.insert(mergedKeybindings, self.db.char.keybindingKey)
-        for key, val in pairs(self.db.char.keybindingModifiers) do
-            if val then
-                table.insert(mergedKeybindings, key)
-            end
-        end
-
-        -- if identical, show window
-        if #mergedKeybindings == #pressedButtons then
-            local showWindow = true
-            for k, v in pairs(mergedKeybindings) do
-                local found = false
-                for k1, v1 in pairs(pressedButtons) do
-                    if v == v1 then
-                        found = true
-                    end
-                end
-                if not found then
-                    showWindow = false
-                end
-            end
-    
-            if showWindow then
-                draw_gui(self)
-            end
+        if check_key_bindings(self) then
+            show_main_frame(self)
+            show_results(self)
         end
     end)
+    KeyboardListenerFrame:SetScript("OnEscapePressed", function(self)
+        print("ESCAPE")
+    end
 
     --[=====[ FILL SEARCH DATABASE --]=====]
-    fill_search_data_table(self)
+    --fill_search_data_table(self)
 end
 
 function KeystrokeLauncher:OnEnable()
@@ -160,11 +143,60 @@ function KeystrokeLauncher:OnDisable()
     -- Called when the addon is disabled
 end
 
-function draw_gui(self)
-    local KL_MAIN_FRAME = AceGUI:Create("Frame")
+function check_key_bindings(self)
+    -- collect currently pressed buttons
+    local pressedButtons = {}
+    if not table.contains({"LALT", "LCTRL"}, key) then
+        table.insert(pressedButtons, key)
+    end
+    if IsControlKeyDown() then
+        table.insert(pressedButtons, "ctrl")
+    end
+    if IsAltKeyDown() then
+        table.insert(pressedButtons, "alt")
+    end
+    
+    -- format configured keybindings
+    local mergedKeybindings = {}
+    if not is_nil_or_empty(self.db.char.keybindingKey) then
+        table.insert(mergedKeybindings, self.db.char.keybindingKey)
+    end
+    for key, val in pairs(self.db.char.keybindingModifiers) do
+        if val then
+            table.insert(mergedKeybindings, key)
+        end
+    end
+
+    --self:Print("Pressed: "..dump(pressedButtons))
+    --self:Print("Merged: "..dump(mergedKeybindings))
+
+    -- check if both er identical
+    if #mergedKeybindings == #pressedButtons then
+        local showWindow = true
+        for k, v in pairs(mergedKeybindings) do
+            local found = false
+            for k1, v1 in pairs(pressedButtons) do
+                if v == v1 then
+                    found = true
+                end
+            end
+            if not found then
+                showWindow = false
+            end
+
+            return showWindow
+        end
+    end
+    return false
+end
+
+function show_main_frame(self)
+    KL_MAIN_FRAME = AceGUI:Create("Frame")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
-    KL_MAIN_FRAME:SetCallback("OnClose", 
-        function(widget) AceGUI:Release(widget) 
+    KL_MAIN_FRAME:SetCallback("OnClose", function(widget) 
+        AceGUI:Release(widget)
+    end)
+    KL_MAIN_FRAME:SetCallback("OnRelease", function(widget) 
         C_Timer.After(0.1, function() 
             self:Print("Keybinding cleared")
             ClearOverrideBindings(KeyboardListenerFrame) 
@@ -173,13 +205,23 @@ function draw_gui(self)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(400)
     KL_MAIN_FRAME:SetHeight(300)
+    --KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
 
     -- search field
     local editbox = AceGUI:Create("EditBox")
     editbox:SetFullWidth(true)
     editbox:SetFocus()
+    editbox:DisableButton(true)
+    -- editbox.frame:SetScript("OnEscapePressed", function(self)
+    --     print("esc")
+    -- end)
+    -- editbox.frame:SetPropagateKeyboardInput(true)
     editbox:SetCallback("OnTextChanged", function(arg1, arg2, value)
-        filter_results(value)
+        show_results(self, value)
+    end)
+    editbox:SetCallback("OnEnterPressed", function(arg1, arg2, value)
+        editbox.frame:SetPropagateKeyboardInput(key=='ENTER')
+        KL_MAIN_FRAME:Release()
     end)
     KL_MAIN_FRAME:AddChild(editbox)
 
@@ -188,58 +230,58 @@ function draw_gui(self)
     scrollcontainer:SetFullWidth(true)
     scrollcontainer:SetFullHeight(true)
     scrollcontainer:SetLayout("Fill")
+    -- scrollcontainer.frame:SetPropagateKeyboardInput(true)
 
     KL_MAIN_FRAME:AddChild(scrollcontainer)
 
     scroll = AceGUI:Create("ScrollFrame")
     scroll:SetLayout("Flow")
+    -- scroll.frame:SetPropagateKeyboardInput(true)
     scrollcontainer:AddChild(scroll)
     
     -- KL_MAIN_FRAME:SetPropagateKeyboardInput(key=='BUTTON1')
     -- scrollcontainer:SetPropagateKeyboardInput(key=='BUTTON1')
 
     --[=====[ SHOW RESULTS --]=====]
-    show_results()
+    --show_results()
    
     KL_MAIN_FRAME:Show()
 end
 
-function show_results()
+function show_results(self, filter)
     SEARCH_TABLE_TO_LABEL = {}
+    scroll:ReleaseChildren()
+    local counter = 0
     for key, val in pairs(self.db.char.searchDataTable) do
-        local label = AceGUI:Create("InteractiveLabel")
-        label:SetText(key)
-        label:SetWidth(200)
-        label:SetUserData("orig_text", key)
-        label:SetCallback("OnClick", function() 
-            select_label(key)
-            edit_master_marco(val['slash_cmd'], 'BUTTON1')
-            --KL_MAIN_FRAME:Close()
-        end)
-        scroll:AddChild(label)
-        SEARCH_TABLE_TO_LABEL[key] = label
-    end
-end
-
-function filter_results(filter)
-    for key, val in pairs(SEARCH_TABLE_TO_LABEL) do
-        if key:match(filter) then
-            val:Show()
-        else
-            val:Hide()
+        if key:lower():find(filter) then
+            local label = AceGUI:Create("InteractiveLabel")
+            label:SetText(key)
+            label:SetWidth(200)
+            label:SetUserData("orig_text", key)
+            label:SetCallback("OnClick", function() 
+                select_label(key)
+                edit_master_marco(self, val['slash_cmd'], 'BUTTON1')
+                KL_MAIN_FRAME:Release()
+            end)
+            scroll:AddChild(label)
+            SEARCH_TABLE_TO_LABEL[key] = label
+            -- the first entry is always the one we want to execute per default
+            if counter == 0 then
+                edit_master_marco(self, val['slash_cmd'])
+            end
+            counter = counter + 1
         end
     end
 end
 
-function edit_master_marco(body, key)
+function edit_master_marco(self, body, key)
     macroId = get_or_create_maco('kl-master')
-
     if not key then
         key = 'ENTER'
     end
-
     EditMacro(macroId, nil, nil, body, 1, 1); 
     SetOverrideBindingMacro(KeyboardListenerFrame, true, key, macroId)
+    self:Print(key.." executes: "..body)
 end
 
 function select_label(key)
@@ -267,7 +309,7 @@ function fill_search_data_table(self)
                 for k, v in pairs(_G) do
                     if k:find('SLASH_') then
                         if k:lower():find(name:lower()) then
-                            db_search[name] = {slash_cmd=v, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+                            db_search[name] = {slash_cmd="/"..v, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
                         end
                     end
                 end
@@ -289,10 +331,9 @@ function fill_search_data_table(self)
         name, iconTexture, body, isLocal = GetMacroInfo(i + 120)
         if name then
             icon_macro_name = "|T"..iconTexture..":16|t "..name
-            db_search[icon_macro_name] = {slash_cmd=name, is_macro=true, tooltipText=body}
+            db_search[icon_macro_name] = {slash_cmd="/cast "..name, is_macro=true, tooltipText=body}
         end
     end
-
 
     -- add spells
     local i = 1
@@ -329,7 +370,7 @@ function fill_search_data_table(self)
                 itemString, itemName = item_link_to_string(itemLink)
                 if IsUsableItem(itemName) then
                     icon_item_name = "|T"..GetItemIcon(itemName)..":16|t "..itemName
-                    db_search[icon_item_name] = {slash_cmd=itemName, is_item=true, tooltipItemString=itemString}
+                    db_search[icon_item_name] = {slash_cmd="/use "..itemName, is_item=true, tooltipItemString=itemString}
                 end
             end
         end
@@ -340,7 +381,7 @@ function fill_search_data_table(self)
         creatureName, spellID, icon = C_MountJournal.GetDisplayedMountInfo(i)
         spellString, spellname = item_link_to_string(GetSpellLink(spellID))
         icon_item_name = "|T"..icon..":16|t "..creatureName
-        db_search[icon_item_name] = {slash_cmd=creatureName, is_item=true, tooltipItemString=spellString}
+        db_search[icon_item_name] = {slash_cmd="/cast "..creatureName, is_item=true, tooltipItemString=spellString}
     end
     self:Print("Search database rebuild done.")
 end
