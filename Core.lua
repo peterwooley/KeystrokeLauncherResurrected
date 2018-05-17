@@ -8,14 +8,19 @@ function KeystrokeLauncher:OnInitialize()
     if self.db.char.keybindingModifiers == nil then
         self.db.char.keybindingModifiers = {}
     end
-    if not SEARCH_TABLE_INIT_DONE then
-        -- C_Timer.After(2, function() 
-        fill_search_data_table(self)
-        SEARCH_TABLE_INIT_DONE = true
-        -- end)
+    if self.db.char.searchDataFreq == nil then
+        self.db.char.searchDataFreq = {}
     end
-    -- self.db.char.searchDataTable = {}
-    -- print("INIT")
+    if self.db.char.searchDataWhatIndex == nil then
+        self.db.char.searchDataWhatIndex = {}
+    end
+    if not SEARCH_TABLE_INIT_DONE then
+        C_Timer.After(2, function()
+            -- this delay is needed because the items in the inventory do not seem to be ready right after login 
+            fill_search_data_table(self)
+            SEARCH_TABLE_INIT_DONE = true
+        end)
+    end
 
     --[=====[ SLASH COMMANDS/ CONFIG OPTIONS --]=====]
     local options = {
@@ -100,6 +105,30 @@ function KeystrokeLauncher:OnInitialize()
                         name = "rebuild",
                         type = "execute",
                         func = function() fill_search_data_table(self) end
+                    },
+                    index = {
+                        name = "to index",
+                        type = "multiselect",
+                        values = {
+                            items = "items",
+                            addons = "addons",
+                            macros = "macros",
+                            spells = "spells",
+                            mounts = "mounts"
+                        },
+                        set = function(info, key, state) self.db.char.searchDataWhatIndex[key] = state end,
+                        get = function(info, key) return self.db.char.searchDataWhatIndex[key] end
+                    }
+                }
+            },
+            search_freq = {
+                name = "search_freq",
+                type = "group",
+                args = {
+                    clear = {
+                        name = "clear",
+                        type = "execute",
+                        func = function() self.db.char.searchDataFreq = {} end
                     }
                 }
             },
@@ -119,29 +148,12 @@ function KeystrokeLauncher:OnInitialize()
     KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
     KeyboardListenerFrame:EnableKeyboard(true)
     KeyboardListenerFrame:SetPropagateKeyboardInput(true)
-    -- KeyboardListenerFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    -- KeyboardListenerFrame:SetScript("OnEvent", function(self, event)
-    -- --     -- without the delay, the items in the bag are not found. Seems like this event is triggered to early.
-    -- --     -- C_Timer.After(2, function() 
-    -- --     --     self:Print('ENTER')
-    -- --     --     DATA_REFRESHED = true
-    -- --     -- end)
-        
-    --     if not SEARCH_TABLE_INIT_DONE then
-    --         C_Timer.After(2, function() 
-    --             fill_search_data_table(self)
-    --             SEARCH_TABLE_INIT_DONE = true
-    --         end)
-    --     end
-    -- end)
     KeyboardListenerFrame:SetScript("OnKeyDown", function(self2, key)
         if check_key_bindings(self) then
             show_main_frame(self)
             show_results(self)
         end
     end)
-
-    --[=====[ FILL SEARCH DATABASE --]=====]
     --fill_search_data_table(self)
 end
 
@@ -216,49 +228,67 @@ function show_main_frame(self)
     KL_MAIN_FRAME:SetWidth(400)
     KL_MAIN_FRAME:SetHeight(300)
     KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(self, key)
-        KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(key=='ENTER')
         move_selector(key)
     end) 
 
     -- search edit box
-    local searchEditbox = AceGUI:Create("EditBox")
-    searchEditbox:SetFullWidth(true)
-    searchEditbox:SetFocus()
-    searchEditbox:DisableButton(true)
-    searchEditbox.editbox:SetPropagateKeyboardInput(false)
-    searchEditbox.editbox:SetScript("OnKeyDown", function(self, key)
+    SEARCH_EDITBOX = AceGUI:Create("EditBox")
+    SEARCH_EDITBOX:SetFullWidth(true)
+    SEARCH_EDITBOX:SetFocus()
+    SEARCH_EDITBOX:DisableButton(true)
+    SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(false)
+    SEARCH_EDITBOX.editbox:SetScript("OnKeyDown", function(widget, key)
         if key == 'ENTER' then
-            searchEditbox.editbox:SetPropagateKeyboardInput(key=='ENTER')
-            KL_MAIN_FRAME:Release()
+            execute_macro(self)
         else
             move_selector(key) 
         end
     end)
-    searchEditbox.editbox:SetScript("OnEscapePressed", function(self) 
+    SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) 
         KL_MAIN_FRAME:Release() 
     end)
-    searchEditbox:SetCallback("OnTextChanged", function(arg1, arg2, value)
+    SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value)
         show_results(self, value)
     end)
-    -- searchEditbox:SetCallback("OnEnterPressed", function(arg1, arg2, value)
-    --     searchEditbox.editbox:SetPropagateKeyboardInput(true)
+    -- SEARCH_EDITBOX:SetCallback("OnEnterPressed", function(arg1, arg2, value)
+    --     SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
     --     KL_MAIN_FRAME:Release()
     -- end)
-    KL_MAIN_FRAME:AddChild(searchEditbox)
+    KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
 
-    -- scroll container/ group
+    -- SCROLL container/ group
     local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
     scrollcontainer:SetFullWidth(true)
     scrollcontainer:SetFullHeight(true)
     scrollcontainer:SetLayout("Fill")
     KL_MAIN_FRAME:AddChild(scrollcontainer)
 
-    -- scroll frame
-    scroll = AceGUI:Create("ScrollFrame")
-    scroll:SetLayout("Flow")
-    scrollcontainer:AddChild(scroll)
+    -- SCROLL frame
+    SCROLL = AceGUI:Create("ScrollFrame")
+    SCROLL:SetLayout("Flow")
+    scrollcontainer:AddChild(SCROLL)
 
     KL_MAIN_FRAME:Show()
+end
+
+-- execute_macro means effectively propagate then close the main window
+function execute_macro(self)
+    -- save freq
+    current_search = SEARCH_EDITBOX:GetText()
+    if is_nil_or_empty(current_search) then
+        current_search = 'EMPTY'
+    end
+    self:Print("CurrentSearch", current_search)
+    freq = 1
+    if self.db.char.searchDataFreq[current_search] then
+        freq = self.db.char.searchDataFreq[current_search].freq + 1
+    end
+    self.db.char.searchDataFreq[current_search] = { key=CURRENT_KEY_TO_EXE, freq=freq}
+    self:Print(dump(self.db.char.searchDataFreq))
+    -- propagate and close
+    SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(key=='ENTER')
+    KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(key=='ENTER')
+    KL_MAIN_FRAME:Release()
 end
 
 function show_results(self, filter)
@@ -266,7 +296,7 @@ function show_results(self, filter)
         filter = '' -- :find cant handle nil
     end
     SEARCH_TABLE_TO_LABEL = {}
-    scroll:ReleaseChildren() -- clear all and start from fresh
+    SCROLL:ReleaseChildren() -- clear all and start from fresh
     local counter = 0
     for key, val in pairs(self.db.char.searchDataTable) do
         if key:lower():find(filter) then
@@ -279,7 +309,7 @@ function show_results(self, filter)
                 select_label(key)
                 edit_master_marco(self, val['slash_cmd'])
             end)
-            scroll:AddChild(label)
+            SCROLL:AddChild(label)
             table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})
             -- the first entry is always the one we want to execute per default
             if counter == 0 then
@@ -298,6 +328,7 @@ function edit_master_marco(self, body, key)
     end
     EditMacro(macroId, nil, nil, body, 1, 1); 
     SetOverrideBindingMacro(KeyboardListenerFrame, true, key, macroId)
+    CURRENT_KEY_TO_EXE = key
     self:Print(key.." executes: "..body)
 end
 
@@ -335,64 +366,82 @@ end
 function fill_search_data_table(self)
     self.db.char.searchDataTable = {}
     local db_search = self.db.char.searchDataTable
-    for i=1, GetNumAddOns() do 
-        name, title, notes, enabled = GetAddOnInfo(i)
-        if notes == nil then
-            notes = ''
-        end 
-        if enabled and IsAddOnLoaded(i) then
-            local slash_cmd = '/'..name:lower()
-            -- only add if slash command exists
-            if slash_cmd_exists(slash_cmd) then
-                db_search[name] = {slash_cmd="/"..slash_cmd, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
-            else
-                -- no slash command exists, let's see if we can find something in _G['SLASH_...']
-                for k, v in pairs(_G) do
-                    if k:find('SLASH_') then
-                        if k:lower():find(name:lower()) then
-                            db_search[name] = {slash_cmd="/"..v, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+    local disabled = "  Disabled: "
+    local enabled = "  Enabled: "
+
+    if self.db.char.searchDataWhatIndex["addons"] then
+        for i=1, GetNumAddOns() do 
+            name, title, notes, enabled = GetAddOnInfo(i)
+            if notes == nil then
+                notes = ''
+            end 
+            if enabled and IsAddOnLoaded(i) then
+                local slash_cmd = '/'..name:lower()
+                -- only add if slash command exists
+                if slash_cmd_exists(slash_cmd) then
+                    db_search[name] = {slash_cmd="/"..slash_cmd, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+                else
+                    -- no slash command exists, let's see if we can find something in _G['SLASH_...']
+                    for k, v in pairs(_G) do
+                        if k:find('SLASH_') then
+                            if k:lower():find(name:lower()) then
+                                db_search[name] = {slash_cmd="/"..v, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+                            end
                         end
                     end
                 end
-            end
-        end 
+            end 
+        end
+        enabled = enabled.."addons "
+    else
+        disabled = disabled.."addons "
     end
 
     -- add macros
-    local numglobal, numperchar = GetNumMacros();
-    for i = 1, numglobal do
-        name, iconTexture, body, isLocal = GetMacroInfo(i)
-        if name then
-            icon_macro_name = "|T"..iconTexture..":16|t "..name
-            -- why does this destroy data?
-            -- db_search[icon_macro_name] = {slash_cmd=name, is_macro=true, tooltipText=body}
+    if self.db.char.searchDataWhatIndex["macros"] then
+        local numglobal, numperchar = GetNumMacros();
+        for i = 1, numglobal do
+            name, iconTexture, body, isLocal = GetMacroInfo(i)
+            if name then
+                icon_macro_name = "|T"..iconTexture..":16|t "..name
+                -- why does this destroy data?
+                -- db_search[icon_macro_name] = {slash_cmd=name, is_macro=true, tooltipText=body}
+            end
         end
-    end
-    for i = 1, numperchar do
-        name, iconTexture, body, isLocal = GetMacroInfo(i + 120)
-        if name then
-            icon_macro_name = "|T"..iconTexture..":16|t "..name
-            db_search[icon_macro_name] = {slash_cmd="/cast "..name, is_macro=true, tooltipText=body}
+        for i = 1, numperchar do
+            name, iconTexture, body, isLocal = GetMacroInfo(i + 120)
+            if name then
+                icon_macro_name = "|T"..iconTexture..":16|t "..name
+                db_search[icon_macro_name] = {slash_cmd="/cast "..name, is_macro=true, tooltipText=body}
+            end
         end
+        enabled = enabled.."macros "
+    else
+        disabled = disabled.."macros "
     end
 
     -- add spells
-    local i = 1
-    while true do
-        local spellName, spellSubName = GetSpellBookItemName(i, BOOKTYPE_SPELL)
-        if not spellName then
-            do break end
-        end
-
-        if IsUsableSpell(spellName) then
-            if not IsPassiveSpell(spellName) then
-                spellString, spellname = item_link_to_string(GetSpellLink(spellName))
-                icon_spell_name = "|T"..GetSpellTexture(spellName)..":16|t "..spellName
-                db_search[icon_spell_name] = {slash_cmd="/cast "..spellName, is_spell=true, tooltipItemString=spellString}
+    if self.db.char.searchDataWhatIndex["spells"] then
+        local i = 1
+        while true do
+            local spellName, spellSubName = GetSpellBookItemName(i, BOOKTYPE_SPELL)
+            if not spellName then
+                do break end
             end
-        end
 
-        i = i + 1
+            if IsUsableSpell(spellName) then
+                if not IsPassiveSpell(spellName) then
+                    spellString, spellname = item_link_to_string(GetSpellLink(spellName))
+                    icon_spell_name = "|T"..GetSpellTexture(spellName)..":16|t "..spellName
+                    db_search[icon_spell_name] = {slash_cmd="/cast "..spellName, is_spell=true, tooltipItemString=spellString}
+                end
+            end
+
+            i = i + 1
+        end
+        enabled = enabled.."spells "
+    else
+        disabled = disabled.."spells "
     end
 
     -- manually adding some slashcommmands
@@ -404,25 +453,38 @@ function fill_search_data_table(self)
     db_search['Dismount'] = {slash_cmd='/dismount', is_slash=true}
 
     -- items
-    for bag=0, NUM_BAG_SLOTS do
-        for bagSlots=1, GetContainerNumSlots(bag) do
-            local itemLink = GetContainerItemLink(bag, bagSlots)
-            if itemLink then
-                itemString, itemName = item_link_to_string(itemLink)
-                if IsUsableItem(itemName) then
-                    icon_item_name = "|T"..GetItemIcon(itemName)..":16|t "..itemName
-                    db_search[icon_item_name] = {slash_cmd="/use "..itemName, is_item=true, tooltipItemString=itemString}
+    if self.db.char.searchDataWhatIndex["items"] then
+        for bag=0, NUM_BAG_SLOTS do
+            for bagSlots=1, GetContainerNumSlots(bag) do
+                local itemLink = GetContainerItemLink(bag, bagSlots)
+                if itemLink then
+                    itemString, itemName = item_link_to_string(itemLink)
+                    if IsUsableItem(itemName) then
+                        icon_item_name = "|T"..GetItemIcon(itemName)..":16|t "..itemName
+                        db_search[icon_item_name] = {slash_cmd="/use "..itemName, is_item=true, tooltipItemString=itemString}
+                    end
                 end
             end
         end
+        enabled = enabled.."items "
+    else
+        disabled = disabled.."items "
     end
 
     -- add mounts
-    for i=1, C_MountJournal.GetNumDisplayedMounts() do
-        creatureName, spellID, icon = C_MountJournal.GetDisplayedMountInfo(i)
-        spellString, spellname = item_link_to_string(GetSpellLink(spellID))
-        icon_item_name = "|T"..icon..":16|t "..creatureName
-        db_search[icon_item_name] = {slash_cmd="/cast "..creatureName, is_item=true, tooltipItemString=spellString}
+    if self.db.char.searchDataWhatIndex["mounts"] then
+        for i=1, C_MountJournal.GetNumDisplayedMounts() do
+            creatureName, spellID, icon = C_MountJournal.GetDisplayedMountInfo(i)
+            spellString, spellname = item_link_to_string(GetSpellLink(spellID))
+            icon_item_name = "|T"..icon..":16|t "..creatureName
+            db_search[icon_item_name] = {slash_cmd="/cast "..creatureName, is_item=true, tooltipItemString=spellString}
+        end
+        enabled = enabled.."mounts "
+    else
+        disabled = disabled.."mounts "
     end
+    
     self:Print("Search database rebuild done.")
+    self:Print(enabled)
+    self:Print(disabled)
 end
