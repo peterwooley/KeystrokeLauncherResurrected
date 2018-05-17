@@ -1,4 +1,4 @@
- KeystrokeLauncher = LibStub("AceAddon-3.0"):NewAddon("KeystrokeLauncher", "AceConsole-3.0")
+KeystrokeLauncher = LibStub("AceAddon-3.0"):NewAddon("KeystrokeLauncher", "AceConsole-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("KeystrokeLauncher")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
@@ -6,14 +6,15 @@ local AceGUI = LibStub("AceGUI-3.0")
 function KeystrokeLauncher:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherDB")
     if self.db.char.keybindingModifiers == nil then
-        self.db.char.keybindingModifiers = {}
+        self.db.char.keybindingModifiers = {["alt"] = true, ["ctrl"] = true} -- default keybinding
     end
     if self.db.char.searchDataFreq == nil then
         self.db.char.searchDataFreq = {}
     end
     if self.db.char.searchDataWhatIndex == nil then
-        self.db.char.searchDataWhatIndex = {}
+        self.db.char.searchDataWhatIndex = {["spells"] = true, ["items"] = true}
     end
+    print(dump(self.db.char.searchDataWhatIndex))
     if not SEARCH_TABLE_INIT_DONE then
         C_Timer.After(2, function()
             -- this delay is needed because the items in the inventory do not seem to be ready right after login 
@@ -28,14 +29,44 @@ function KeystrokeLauncher:OnInitialize()
         handler = KeystrokeLauncher,
         type = "group",
         args = {
-            enable = {
-                name = L["config_enable_name"],
-                desc = L["config_enable_desc"],
-                type = "toggle",
-                set = function(info, val) KeystrokeLauncher.enabled = val end,
-                get = function(info) return KeystrokeLauncher.enabled end
+            -- enable = {
+            --     name = L["config_enable_name"],
+            --     desc = L["config_enable_desc"],
+            --     type = "toggle",
+            --     set = function(info, val) KeystrokeLauncher.enabled = val end,
+            --     get = function(info) return KeystrokeLauncher.enabled end
+            -- },
+            hide = {
+                order = 1,
+                name = L["config_hide_name"],
+                desc = L["config_hide_desc"],
+                type = "execute",
+                func = function() AceConfigDialog:Close("KeystrokeLauncher") end,
             },
-            moreoptions = {
+            show = {
+                order = 2,
+                name = L["config_show_name"],
+                desc = L["config_show_desc"],
+                type = "execute",
+                func = function() AceConfigDialog:Open("KeystrokeLauncher") end,
+                guiHidden = true
+            },
+            reset = {
+                order = 3,
+                name = "Reset all",
+                desc = "Do a factory reset",
+                type = "execute",
+                confirm = true,
+                confirmText = "This resets every Kestroke Launcher database to default values - proceed?",
+                func = function()
+                    for k,v in pairs(self.db.char) do
+                        self.db.char[k] = nil
+                    end
+                    ReloadUI()
+                end
+            },
+            keybindings = {
+                order = 4,
                 name = L["config_group_keybindings"],
                 type = "group",
                 args = {
@@ -62,52 +93,40 @@ function KeystrokeLauncher:OnInitialize()
                     }
                 }
             },
-            -- toggle = {
-            --     name = "toggle",
-            --     type = "execute",
-            --     func = function() 
-            --         if AceConfigDialog:IsVisible() then
-            --             AceConfigDialog:Close("KeystrokeLauncher")
-            --         else
-            --             AceConfigDialog:Open("KeystrokeLauncher")
-            --         end
-            --     end
-            -- },
-            gui = {
-                name = "gui",
-                type = "group",
-                args = {
-                    show = {
-                        name = L["config_show_name"],
-                        desc = L["config_show_desc"],
-                        guiHidden = true,
-                        type = "execute",
-                        func = function() AceConfigDialog:Open("KeystrokeLauncher") end,
-                    },
-                    hide = {
-                        name = L["config_hide_name"],
-                        desc = L["config_hide_desc"],
-                        type = "execute",
-                        func = function() AceConfigDialog:Close("KeystrokeLauncher") end,
-                    },
-                },
-            },
             search_table = {
-                name = "search_table",
+                order = 5,
+                name = "Search Data Table",
                 type = "group",
                 args = {
-                    show = {
-                        name = "show",
+                    header_one = {
+                        type = "header",
+                        name = "The search data table is the main search index.",
+                        order = 1
+                    },
+                    print = {
+                        name = "print",
                         type = "execute",
-                        func = function() format_search_data_table(self) end
+                        func = function() print_search_data_table(self) end,
+                        order = 2
                     },
                     rebuild = {
                         name = "rebuild",
                         type = "execute",
-                        func = function() fill_search_data_table(self) end
+                        func = function() fill_search_data_table(self) end,
+                        order = 3
+                    },
+                    header_two = {
+                        type = "header",
+                        name = "Configure what to index",
+                        order = 4
+                    },
+                    desc = {
+                        type = "description",
+                        name = "Don't forget to hit the rebuild button after enabling/ disabling a module.\n\nNote: enabling the addons module will lead to a small lag evertime the database is refreshed (default: once per login).",
+                        order = 5
                     },
                     index = {
-                        name = "to index",
+                        name = "Select to enable",
                         type = "multiselect",
                         values = {
                             items = "items",
@@ -117,27 +136,37 @@ function KeystrokeLauncher:OnInitialize()
                             mounts = "mounts"
                         },
                         set = function(info, key, state) self.db.char.searchDataWhatIndex[key] = state end,
-                        get = function(info, key) return self.db.char.searchDataWhatIndex[key] end
+                        get = function(info, key) return self.db.char.searchDataWhatIndex[key] end,
+                        order = 6
                     }
                 }
             },
             search_freq = {
-                name = "search_freq",
+                order = 6,
+                name = "Search Frequency Table",
                 type = "group",
                 args = {
+                    description = {
+                        type = "header",
+                        name = "The search frequency table stores how often you exectued what.",
+                        order = 1
+                    },
                     clear = {
                         name = "clear",
+                        desc= "Empty the search freq table",
                         type = "execute",
-                        func = function() self.db.char.searchDataFreq = {} end
+                        func = function() 
+                            self.db.char.searchDataFreq = {} 
+                            self:Print("Search frequency table cleared.")
+                        end
+                    },
+                    print = {
+                        name = "print",
+                        type = "execute",
+                        func = function() print_search_data_freq(self) end
                     }
                 }
-            },
-            -- close = {
-            --     name = "close",
-            --     type = "execute",
-            --     func = function() KL_MAIN_FRAME:Release() end
-            -- }
-
+            }
         }
     }
     options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db) -- enable profiles
@@ -148,66 +177,48 @@ function KeystrokeLauncher:OnInitialize()
     KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
     KeyboardListenerFrame:EnableKeyboard(true)
     KeyboardListenerFrame:SetPropagateKeyboardInput(true)
-    KeyboardListenerFrame:SetScript("OnKeyDown", function(self2, key)
-        if check_key_bindings(self) then
+    KeyboardListenerFrame:SetScript("OnKeyDown", function(widget, keyboard_key)
+        if check_key_bindings(self, keyboard_key) then
             show_main_frame(self)
             show_results(self)
         end
     end)
-    --fill_search_data_table(self)
 end
 
-function KeystrokeLauncher:OnEnable()
-    -- Called when the addon is enabled
-end
-
-function KeystrokeLauncher:OnDisable()
-    -- Called when the addon is disabled
-end
-
-function check_key_bindings(self)
+function check_key_bindings(self, keyboard_key)
     -- collect currently pressed buttons
     local pressedButtons = {}
-    if not table.contains({"LALT", "LCTRL"}, key) then
-        table.insert(pressedButtons, key)
+    if not table.contains({"LALT", "LCTRL", "LSHIFT", "RALT", "RCTRL", "RSHIFT"}, keyboard_key) then
+        pressedButtons[keyboard_key] = ''
     end
-    if IsControlKeyDown() then
-        table.insert(pressedButtons, "ctrl")
-    end
-    if IsAltKeyDown() then
-        table.insert(pressedButtons, "alt")
-    end
+    if IsControlKeyDown() then pressedButtons["ctrl"] = '' end
+    if IsAltKeyDown() then pressedButtons["alt"] = '' end
+    if IsShiftKeyDown() then pressedButtons["shift"] = '' end
     
     -- format configured keybindings
     local mergedKeybindings = {}
     if not is_nil_or_empty(self.db.char.keybindingKey) then
-        table.insert(mergedKeybindings, self.db.char.keybindingKey)
+        mergedKeybindings[self.db.char.keybindingKey] = ''
     end
-    for key, val in pairs(self.db.char.keybindingModifiers) do
-        if val then
-            table.insert(mergedKeybindings, key)
+    for k, v in pairs(self.db.char.keybindingModifiers) do
+        if v then
+            mergedKeybindings[k] = ''
         end
     end
 
-    --self:Print("Pressed: "..dump(pressedButtons))
-    --self:Print("Merged: "..dump(mergedKeybindings))
+    --self:Print("Key:", keyboard_key)
+    --self:Print("Pressed:", dump(pressedButtons))
+    --self:Print("Merged:", dump(mergedKeybindings))
 
-    -- check if both er identical
-    if #mergedKeybindings == #pressedButtons then
+    -- compare both tables for exakt equality
+    if table.length(pressedButtons) == table.length(mergedKeybindings) then
         local showWindow = true
         for k, v in pairs(mergedKeybindings) do
-            local found = false
-            for k1, v1 in pairs(pressedButtons) do
-                if v == v1 then
-                    found = true
-                end
-            end
-            if not found then
+            if not pressedButtons[k] then
                 showWindow = false
             end
-
-            return showWindow
         end
+        return showWindow
     end
     return false
 end
@@ -301,6 +312,32 @@ function get_freq(self, key)
     return 0
 end
 
+function print_search_data_freq(self)
+    self:Print("Content of search freq table:")
+    for k,v in pairs(self.db.char.searchDataFreq) do
+        self:Print('  '..v.freq, v.key)
+    end
+end
+
+function print_search_data_table(self)
+    self:Print("Content of search data table:")
+    local search_data_table_sorted = sort_search_data_table(self)
+    for k,v in ipairs(search_data_table_sorted) do
+        self:Print('  '..v[1])
+    end
+end
+
+function sort_search_data_table(self)
+    local search_data_table_sorted = {}
+    for k, v in pairs(self.db.char.searchDataTable) do
+        table.insert(search_data_table_sorted, {k, get_freq(self, k)})
+    end
+    table.sort(search_data_table_sorted, function(a,b) 
+        return a[2] > b[2]
+    end)
+    return search_data_table_sorted
+end
+
 function show_results(self, filter)
     if filter == nil then
         filter = '' -- :find cant handle nil
@@ -309,17 +346,10 @@ function show_results(self, filter)
     SCROLL:ReleaseChildren() -- clear all and start from fresh
 
     -- sort data by combinng two tables
-    local search_data_table_sorted = {}
-    for k, v in pairs(self.db.char.searchDataTable) do
-        table.insert(search_data_table_sorted, {k, get_freq(self, k)})
-    end
-    table.sort(search_data_table_sorted, function(a,b) 
-        return a[2] > b[2]
-    end)
+    local search_data_table_sorted = sort_search_data_table(self)
 
     local counter = 0
     for k,v in ipairs(search_data_table_sorted) do
-        print(k, v[2], v[1])
         local key = v[1]
         if key:lower():find(filter) then
             local slash_cmd = self.db.char.searchDataTable[key].slash_cmd
@@ -344,7 +374,6 @@ function show_results(self, filter)
     end
 end
 
-
 function move_selector(self, keyboard_key)
     -- but only down and up to the min and max boundaries
     if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
@@ -364,12 +393,14 @@ function select_label(self, key, index)
             go = v.key == key
         end
         if go then
-            v.label:SetText(v.label:GetUserData("orig_text") ..' (sel)'..k)
+            --v.label:SetText(v.label:GetUserData("orig_text") ..' (sel)'..k)
+            v.label:SetColor(255, 0, 0, 1)
             CURRENTLY_SELECTED_LABEL_INDEX = k
             CURRENTLY_SELECTED_LABEL_KEY = v.key
             edit_master_marco(self, v.key)
         else
-            v.label:SetText(v.label:GetUserData("orig_text")..k)
+            --v.label:SetText(v.label:GetUserData("orig_text")..k)
+            v.label:SetColor(255, 255, 255, 1)
         end
     end
 end
@@ -382,7 +413,7 @@ function edit_master_marco(self, key, keyboard_key)
     local body = self.db.char.searchDataTable[key].slash_cmd
     EditMacro(macroId, nil, nil, body, 1, 1); 
     SetOverrideBindingMacro(KeyboardListenerFrame, true, keyboard_key, macroId)
-    self:Print(keyboard_key.." executes: "..body)
+    KL_MAIN_FRAME:SetStatusText(body)
 end
 
 function fill_search_data_table(self)
