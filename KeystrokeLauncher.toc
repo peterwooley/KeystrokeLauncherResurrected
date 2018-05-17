@@ -2,8 +2,8 @@
 ## Title: Keystroke Launcher
 ## Notes: A simple keystroke launcher for macros, spells, addons and items.
 ## Author: endymonium@gmail.com
-## Version: 0.4
-## SavedVariables: KeystrokeLauncherDB
+## Version: @project-version@
+## X-Curse-Project-ID: 293252
 
 embeds.xml
 Locales\Locales.xml
