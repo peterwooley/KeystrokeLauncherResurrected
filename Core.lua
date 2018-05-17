@@ -25,17 +25,10 @@ function KeystrokeLauncher:OnInitialize()
 
     --[=====[ SLASH COMMANDS/ CONFIG OPTIONS --]=====]
     local options = {
-        name = "KeystrokeLauncher",
+        name = "Keystroke Launcher",
         handler = KeystrokeLauncher,
         type = "group",
         args = {
-            -- enable = {
-            --     name = L["config_enable_name"],
-            --     desc = L["config_enable_desc"],
-            --     type = "toggle",
-            --     set = function(info, val) KeystrokeLauncher.enabled = val end,
-            --     get = function(info) return KeystrokeLauncher.enabled end
-            -- },
             hide = {
                 order = 1,
                 name = L["config_hide_name"],
@@ -53,11 +46,11 @@ function KeystrokeLauncher:OnInitialize()
             },
             reset = {
                 order = 3,
-                name = "Reset all",
-                desc = "Do a factory reset",
+                name = L["config_reset_name"],
+                desc = L["config_reset_desc"],
                 type = "execute",
                 confirm = true,
-                confirmText = "This resets every Kestroke Launcher database to default values - proceed?",
+                confirmText = L["config_reset_confirmText"],
                 func = function()
                     for k,v in pairs(self.db.char) do
                         self.db.char[k] = nil
@@ -67,7 +60,7 @@ function KeystrokeLauncher:OnInitialize()
             },
             keybindings = {
                 order = 4,
-                name = L["config_group_keybindings"],
+                name = L["config_keybinding"],
                 type = "group",
                 args = {
                     desc = {
@@ -75,7 +68,7 @@ function KeystrokeLauncher:OnInitialize()
                         type = "header"
                     },
                     keybinding = {
-                        name = L["config_keybinding_name"],
+                        name = L["config_keybinding"],
                         type = "keybinding",
                         set = function(info, val) self.db.char.keybindingKey = val end,
                         get = function(info) return self.db.char.keybindingKey end
@@ -95,38 +88,39 @@ function KeystrokeLauncher:OnInitialize()
             },
             search_table = {
                 order = 5,
-                name = "Search Data Table",
+                name = L["config_search_table_name"],
                 type = "group",
                 args = {
                     header_one = {
+                        order = 1,
+                        name = L["config_search_table_header_one"],
                         type = "header",
-                        name = "The search data table is the main search index.",
-                        order = 1
                     },
                     print = {
-                        name = "print",
+                        order = 2,
+                        name = L["config_print"],
                         type = "execute",
                         func = function() print_search_data_table(self) end,
-                        order = 2
                     },
                     rebuild = {
-                        name = "rebuild",
+                        order = 3,
+                        name = L["config_search_table_rebuild"],
                         type = "execute",
                         func = function() fill_search_data_table(self) end,
-                        order = 3
                     },
                     header_two = {
+                        order = 4,
+                        name = L["config_search_table_header_two"],
                         type = "header",
-                        name = "Configure what to index",
-                        order = 4
                     },
                     desc = {
+                        order = 5,
+                        name = L["config_search_table_desc"],
                         type = "description",
-                        name = "Don't forget to hit the rebuild button after enabling/ disabling a module.\n\nNote: enabling the addons module will lead to a small lag evertime the database is refreshed (default: once per login).",
-                        order = 5
                     },
                     index = {
-                        name = "Select to enable",
+                        order = 6,
+                        name = L["config_search_table_index"],
                         type = "multiselect",
                         values = {
                             items = "items",
@@ -137,31 +131,30 @@ function KeystrokeLauncher:OnInitialize()
                         },
                         set = function(info, key, state) self.db.char.searchDataWhatIndex[key] = state end,
                         get = function(info, key) return self.db.char.searchDataWhatIndex[key] end,
-                        order = 6
                     }
                 }
             },
             search_freq = {
                 order = 6,
-                name = "Search Frequency Table",
+                name = L["config_search_freq_table_name"],
                 type = "group",
                 args = {
                     description = {
+                        order = 1,
+                        name = L["config_search_freq_table_desc"],
                         type = "header",
-                        name = "The search frequency table stores how often you exectued what.",
-                        order = 1
                     },
                     clear = {
-                        name = "clear",
-                        desc= "Empty the search freq table",
+                        name = L["config_search_freq_table_clear_name"],
+                        desc= L["config_search_freq_table_clear_desc"],
                         type = "execute",
                         func = function() 
                             self.db.char.searchDataFreq = {} 
-                            self:Print("Search frequency table cleared.")
+                            self:Print(L["config_search_freq_table_cleared"])
                         end
                     },
                     print = {
-                        name = "print",
+                        name = L["config_print"],
                         type = "execute",
                         func = function() print_search_data_freq(self) end
                     }
@@ -286,7 +279,6 @@ function execute_macro(self)
     if is_nil_or_empty(current_search) then
         current_search = 'EMPTY'
     end
-    self:Print("CurrentSearch", current_search)
     freq = 1
     if self.db.char.searchDataFreq[current_search] then
         -- only increase by one, if it is not a different key
@@ -313,14 +305,14 @@ function get_freq(self, key)
 end
 
 function print_search_data_freq(self)
-    self:Print("Content of search freq table:")
+    self:Print(L["PRINT_SEARCH_DATA_FREQ"])
     for k,v in pairs(self.db.char.searchDataFreq) do
         self:Print('  '..v.freq, v.key)
     end
 end
 
 function print_search_data_table(self)
-    self:Print("Content of search data table:")
+    self:Print(L["PRINT_SEARCH_DATA_TABLE"])
     local search_data_table_sorted = sort_search_data_table(self)
     for k,v in ipairs(search_data_table_sorted) do
         self:Print('  '..v[1])
@@ -419,8 +411,8 @@ end
 function fill_search_data_table(self)
     self.db.char.searchDataTable = {}
     local db_search = self.db.char.searchDataTable
-    local disabled = "  Disabled: "
-    local enabled = "  Enabled: "
+    local disabled = L["INDEX_DISABLED"]
+    local enabled = L["INDEX_ENABLED"]
 
     if self.db.char.searchDataWhatIndex["addons"] then
         for i=1, GetNumAddOns() do 
@@ -537,7 +529,7 @@ function fill_search_data_table(self)
         disabled = disabled.."mounts "
     end
     
-    self:Print("Search database rebuild done.")
+    self:Print(L["INDEX_HEADER"])
     self:Print(enabled)
     self:Print(disabled)
 end
