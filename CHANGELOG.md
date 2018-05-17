@@ -1,9 +1,12 @@
 # Changelog
 
-## v0.4
+## v0.5
 
 * Complete rework based on Ace3
-* Added 
+* NEW: configuration window, hit `ctrl+alt`, type in `kl` and select the `/kl show` entry.
+* NEW: custom keybindings
+* NEW: German translation
+* REMOVED: shortcut logic and tooltops, will be added in next release
 
 ## v0.3
 

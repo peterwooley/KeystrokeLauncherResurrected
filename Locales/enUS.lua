@@ -38,7 +38,7 @@ L["config_search_freq_table_cleared"] = "Search freq table cleared"
 L["PRINT_SEARCH_DATA_TABLE"] = "Content of search freq table:"
 L["PRINT_SEARCH_DATA_FREQ"] = "Content of search data table:"
 L["INDEX_HEADER"] = "Search database rebuild done."
-L["INDEX_DISABLED"] = "  Aktiviert: "
-L["INDEX_ENABLED"] = "  Deaktiviert: "
+L["INDEX_DISABLED"] = "  Disabled: "
+L["INDEX_ENABLED"] = "  Enabled: "
 
 end

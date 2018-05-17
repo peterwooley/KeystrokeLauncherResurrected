@@ -287,7 +287,6 @@ function execute_macro(self)
         end
     end
     self.db.char.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
-    self:Print(dump(self.db.char.searchDataFreq))
     -- propagate and close
     SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
     KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
@@ -416,21 +415,21 @@ function fill_search_data_table(self)
 
     if self.db.char.searchDataWhatIndex["addons"] then
         for i=1, GetNumAddOns() do 
-            name, title, notes, enabled = GetAddOnInfo(i)
+            name, title, notes, addonenabled = GetAddOnInfo(i)
             if notes == nil then
                 notes = ''
             end 
-            if enabled and IsAddOnLoaded(i) then
+            if addonenabled and IsAddOnLoaded(i) then
                 local slash_cmd = '/'..name:lower()
                 -- only add if slash command exists
                 if slash_cmd_exists(slash_cmd) then
-                    db_search[name] = {slash_cmd="/"..slash_cmd, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+                    db_search[name] = {slash_cmd=slash_cmd, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
                 else
                     -- no slash command exists, let's see if we can find something in _G['SLASH_...']
                     for k, v in pairs(_G) do
                         if k:find('SLASH_') then
                             if k:lower():find(name:lower()) then
-                                db_search[name] = {slash_cmd="/"..v, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+                                db_search[name] = {slash_cmd=v, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
                             end
                         end
                     end
@@ -492,9 +491,7 @@ function fill_search_data_table(self)
     -- manually adding some slashcommmands
     db_search['Reload UI'] = {slash_cmd='/reload', is_slash=true}
     db_search['Logout'] = {slash_cmd='/logout', is_slash=true}
-    db_search['kl update'] = {slash_cmd='/kl update', is_slash=true}
-    db_search['kl show'] = {slash_cmd='/kl show', is_slash=true}
-    db_search['kl clear'] = {slash_cmd='/kl clear', is_slash=true}
+    db_search['/kl show - show Keystroke Launcher UI'] = {slash_cmd='/kl show', is_slash=true}
     db_search['Dismount'] = {slash_cmd='/dismount', is_slash=true}
 
     -- items
