@@ -215,9 +215,7 @@ end
 function show_main_frame(self)
     KL_MAIN_FRAME = AceGUI:Create("Frame")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
-    KL_MAIN_FRAME:SetCallback("OnClose", function(widget) 
-        AceGUI:Release(widget)
-    end)
+    KL_MAIN_FRAME:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
     KL_MAIN_FRAME:SetCallback("OnRelease", function(widget) 
         C_Timer.After(0.1, function() 
             self:Print("Keybinding cleared")
@@ -227,9 +225,7 @@ function show_main_frame(self)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(400)
     KL_MAIN_FRAME:SetHeight(300)
-    KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(self, key)
-        move_selector(key)
-    end) 
+    KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(false)
 
     -- search edit box
     SEARCH_EDITBOX = AceGUI:Create("EditBox")
@@ -237,36 +233,37 @@ function show_main_frame(self)
     SEARCH_EDITBOX:SetFocus()
     SEARCH_EDITBOX:DisableButton(true)
     SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(false)
-    SEARCH_EDITBOX.editbox:SetScript("OnKeyDown", function(widget, key)
-        if key == 'ENTER' then
+    SEARCH_EDITBOX.editbox:SetScript("OnKeyDown", function(widget, keyboard_key)
+        if keyboard_key == 'ENTER' then
             execute_macro(self)
         else
-            move_selector(key) 
+            move_selector(self, keyboard_key) 
         end
     end)
-    SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) 
-        KL_MAIN_FRAME:Release() 
-    end)
-    SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value)
-        show_results(self, value)
-    end)
-    -- SEARCH_EDITBOX:SetCallback("OnEnterPressed", function(arg1, arg2, value)
-    --     SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
-    --     KL_MAIN_FRAME:Release()
-    -- end)
+    --SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(key=='ENTER')
+    SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) KL_MAIN_FRAME:Release() end)
+    SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value) show_results(self, value) end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
 
     -- SCROLL container/ group
-    local scrollcontainer = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
-    scrollcontainer:SetFullWidth(true)
-    scrollcontainer:SetFullHeight(true)
-    scrollcontainer:SetLayout("Fill")
-    KL_MAIN_FRAME:AddChild(scrollcontainer)
+    SCROLLCONTAINER = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    SCROLLCONTAINER:SetFullWidth(true)
+    SCROLLCONTAINER:SetFullHeight(true)
+    SCROLLCONTAINER:SetLayout("Fill")
+    SCROLLCONTAINER.frame:SetPropagateKeyboardInput(false)
+    SCROLLCONTAINER.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
+        if keyboard_key == 'ENTER' then
+            execute_macro(self)
+        else
+            move_selector(self, keyboard_key) 
+        end
+    end)
+    KL_MAIN_FRAME:AddChild(SCROLLCONTAINER)
 
     -- SCROLL frame
     SCROLL = AceGUI:Create("ScrollFrame")
     SCROLL:SetLayout("Flow")
-    scrollcontainer:AddChild(SCROLL)
+    SCROLLCONTAINER:AddChild(SCROLL)
 
     KL_MAIN_FRAME:Show()
 end
@@ -281,14 +278,27 @@ function execute_macro(self)
     self:Print("CurrentSearch", current_search)
     freq = 1
     if self.db.char.searchDataFreq[current_search] then
-        freq = self.db.char.searchDataFreq[current_search].freq + 1
+        -- only increase by one, if it is not a different key
+        if self.db.char.searchDataFreq[current_search].key == CURRENTLY_SELECTED_LABEL_KEY then
+            freq = self.db.char.searchDataFreq[current_search].freq + 1
+        end
     end
-    self.db.char.searchDataFreq[current_search] = { key=CURRENT_KEY_TO_EXE, freq=freq}
+    self.db.char.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
     self:Print(dump(self.db.char.searchDataFreq))
     -- propagate and close
-    SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(key=='ENTER')
-    KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(key=='ENTER')
-    KL_MAIN_FRAME:Release()
+    SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
+    KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
+    SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
+    KL_MAIN_FRAME:Hide()
+end
+
+function get_freq(self, key)
+    for k,v in pairs(self.db.char.searchDataFreq) do
+        if v.key == key then
+            return v.freq
+        end
+    end
+    return 0
 end
 
 function show_results(self, filter)
@@ -297,70 +307,82 @@ function show_results(self, filter)
     end
     SEARCH_TABLE_TO_LABEL = {}
     SCROLL:ReleaseChildren() -- clear all and start from fresh
+
+    -- sort data by combinng two tables
+    local search_data_table_sorted = {}
+    for k, v in pairs(self.db.char.searchDataTable) do
+        table.insert(search_data_table_sorted, {k, get_freq(self, k)})
+    end
+    table.sort(search_data_table_sorted, function(a,b) 
+        return a[2] > b[2]
+    end)
+
     local counter = 0
-    for key, val in pairs(self.db.char.searchDataTable) do
+    for k,v in ipairs(search_data_table_sorted) do
+        print(k, v[2], v[1])
+        local key = v[1]
         if key:lower():find(filter) then
+            local slash_cmd = self.db.char.searchDataTable[key].slash_cmd
             local label = AceGUI:Create("InteractiveLabel")
             label:SetText(key)
             label:SetWidth(200)
             label:SetUserData("orig_text", key)
             label:SetCallback("OnClick", function() 
                 -- cant propagate mouse clicks, so need to press enter after selecting
-                select_label(key)
-                edit_master_marco(self, val['slash_cmd'])
+                select_label(self, key)
+                --edit_master_marco(self, slash_cmd)
             end)
             SCROLL:AddChild(label)
             table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})
             -- the first entry is always the one we want to execute per default
             if counter == 0 then
-                edit_master_marco(self, val['slash_cmd'])
-                select_label(key)
+                --edit_master_marco(self, slash_cmd)
+                select_label(self, key)
             end
             counter = counter + 1
         end
     end
 end
 
-function edit_master_marco(self, body, key)
-    macroId = get_or_create_maco('kl-master')
-    if not key then
-        key = 'ENTER'
-    end
-    EditMacro(macroId, nil, nil, body, 1, 1); 
-    SetOverrideBindingMacro(KeyboardListenerFrame, true, key, macroId)
-    CURRENT_KEY_TO_EXE = key
-    self:Print(key.." executes: "..body)
-end
 
-function move_selector(key)
+function move_selector(self, keyboard_key)
     -- but only down and up to the min and max boundaries
-    if key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
-        select_label_index(CURRENTLY_SELECTED_LABEL_INDEX-1)
-    elseif key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
-        select_label_index(CURRENTLY_SELECTED_LABEL_INDEX+1)
+    if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
+        select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
+    elseif keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
+        select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
     end
 end
 
-function select_label_index(index)
+function select_label(self, key, index)
     for k, v in pairs(SEARCH_TABLE_TO_LABEL) do
-        if index == k then
+        -- differnt if logic depening on call with key or index
+        local go = false
+        if index then
+            go = index == k
+        elseif key then
+            go = v.key == key
+        end
+        if go then
             v.label:SetText(v.label:GetUserData("orig_text") ..' (sel)'..k)
             CURRENTLY_SELECTED_LABEL_INDEX = k
+            CURRENTLY_SELECTED_LABEL_KEY = v.key
+            edit_master_marco(self, v.key)
         else
             v.label:SetText(v.label:GetUserData("orig_text")..k)
         end
     end
 end
 
-function select_label(key)
-    for k, v in pairs(SEARCH_TABLE_TO_LABEL) do
-        if v.key == key then
-            v.label:SetText(v.label:GetUserData("orig_text") ..' (sel)'..k)
-            CURRENTLY_SELECTED_LABEL_INDEX = k
-        else
-            v.label:SetText(v.label:GetUserData("orig_text")..k)
-        end
+function edit_master_marco(self, key, keyboard_key)
+    macroId = get_or_create_maco('kl-master')
+    if not keyboard_key then
+        keyboard_key = 'ENTER'
     end
+    local body = self.db.char.searchDataTable[key].slash_cmd
+    EditMacro(macroId, nil, nil, body, 1, 1); 
+    SetOverrideBindingMacro(KeyboardListenerFrame, true, keyboard_key, macroId)
+    self:Print(keyboard_key.." executes: "..body)
 end
 
 function fill_search_data_table(self)
