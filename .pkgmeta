@@ -31,3 +31,6 @@ manual-changelog:
     markup-type: markdown
 
 package-as: KeystrokeLauncher
+
+ignore:
+ - Libs
