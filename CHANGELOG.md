@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8
+
+* Disabled some debug prints
+* Fixed bug where database was actually not a database and every time the addon was a loaded, everything reset.
+
 ## v0.5
 
 * Complete rework based on Ace3

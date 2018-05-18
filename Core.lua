@@ -14,7 +14,6 @@ function KeystrokeLauncher:OnInitialize()
     if self.db.char.searchDataWhatIndex == nil then
         self.db.char.searchDataWhatIndex = {["spells"] = true, ["items"] = true}
     end
-    print(dump(self.db.char.searchDataWhatIndex))
     if not SEARCH_TABLE_INIT_DONE then
         C_Timer.After(2, function()
             -- this delay is needed because the items in the inventory do not seem to be ready right after login 
@@ -222,7 +221,7 @@ function show_main_frame(self)
     KL_MAIN_FRAME:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
     KL_MAIN_FRAME:SetCallback("OnRelease", function(widget) 
         C_Timer.After(0.1, function() 
-            self:Print("Keybinding cleared")
+            --self:Print("Keybinding cleared")
             ClearOverrideBindings(KeyboardListenerFrame) 
         end)
     end)
@@ -306,7 +305,7 @@ end
 function print_search_data_freq(self)
     self:Print(L["PRINT_SEARCH_DATA_FREQ"])
     for k,v in pairs(self.db.char.searchDataFreq) do
-        self:Print('  '..v.freq, v.key)
+        self:Print('',k,v.freq,v.key)
     end
 end
 
@@ -314,7 +313,7 @@ function print_search_data_table(self)
     self:Print(L["PRINT_SEARCH_DATA_TABLE"])
     local search_data_table_sorted = sort_search_data_table(self)
     for k,v in ipairs(search_data_table_sorted) do
-        self:Print('  '..v[1])
+        self:Print('',v[1])
     end
 end
 
@@ -346,7 +345,7 @@ function show_results(self, filter)
             local slash_cmd = self.db.char.searchDataTable[key].slash_cmd
             local label = AceGUI:Create("InteractiveLabel")
             label:SetText(key)
-            label:SetWidth(200)
+            label:SetWidth(390)
             label:SetUserData("orig_text", key)
             label:SetCallback("OnClick", function() 
                 -- cant propagate mouse clicks, so need to press enter after selecting
@@ -491,7 +490,8 @@ function fill_search_data_table(self)
     -- manually adding some slashcommmands
     db_search['Reload UI'] = {slash_cmd='/reload', is_slash=true}
     db_search['Logout'] = {slash_cmd='/logout', is_slash=true}
-    db_search['/kl show - show Keystroke Launcher UI'] = {slash_cmd='/kl show', is_slash=true}
+    db_search['/kl show'] = {slash_cmd='/kl show', is_slash=true}
+    db_search['/kl search_freq print'] = {slash_cmd='/kl search_freq print', is_slash=true}
     db_search['Dismount'] = {slash_cmd='/dismount', is_slash=true}
 
     -- items

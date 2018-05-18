@@ -3,6 +3,7 @@
 ## Notes: A simple keystroke launcher for macros, spells, addons and items.
 ## Author: endymonium@gmail.com
 ## Version: @project-version@
+## SavedVariables: KeystrokeLauncherDB
 # X-Curse-Project-ID: 293252
 
 embeds.xml
