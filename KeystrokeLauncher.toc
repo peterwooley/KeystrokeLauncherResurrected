@@ -4,7 +4,7 @@
 ## Author: endymonium@gmail.com
 ## Version: @project-version@
 ## SavedVariables: KeystrokeLauncherDB
-# X-Curse-Project-ID: 293252
+## X-Curse-Project-ID: 293252
 
 embeds.xml
 Locales\Locales.xml
