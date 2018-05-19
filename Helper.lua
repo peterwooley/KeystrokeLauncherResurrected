@@ -54,4 +54,19 @@ function table.length(T)
     local count = 0
     for _ in pairs(T) do count = count + 1 end
     return count
-  end
+end
+
+-- ENUM from https://gist.github.com/szensk/7986347f09742337b36e
+local enummt = {
+    __index = function(table, key) 
+        if rawget(table.enums, key) then 
+        return key
+    end
+end
+}
+
+function Enumm(t)
+    local e = { enums = t }
+    return setmetatable(e, enummt)
+end
+ 

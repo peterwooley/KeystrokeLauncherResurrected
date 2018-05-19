@@ -23,9 +23,9 @@ L["config_reset_confirmText"] = "Alle Keystroke Launcher Datenbanken werden auf 
 
 L["config_search_table_name"] = "Suchdatenbank"
 L["config_search_table_header_one"] = "Die Suchdatenbank ist der Hauptsuchindex."
-L["config_search_table_rebuild"] = "Rebuild"
+L["config_search_table_rebuild"] = "Aktualisieren"
 L["config_search_table_header_two"] = "Einstellungen zu den Index Modulen"
-L["config_search_table_desc"] = "Vergesse nicht auf den 'Rebuild' Knopf zu drücken, nachdem du addons aktiviert/ deaktiviert hast.\n\nAnmerkung: wenn du das 'Addons' Modul aktivierst, gibt es kleine lags beim erzeugen der Suchdatenbank (standardmäßig einmal beim Login)."
+L["config_search_table_desc"] = "Vergesse nicht auf den 'Aktualisieren' Knopf zu drücken, nachdem du addons aktiviert/ deaktiviert hast.\n\nAnmerkung: wenn du das 'Addons' Modul aktivierst, gibt es kleine lags beim erzeugen der Suchdatenbank (standardmäßig einmal beim Login)."
 L["config_search_table_index"] = "Auswählen zum aktivieren"
 
 L["config_search_freq_table_name"] = "Häufigkeitsdatenbank"
@@ -37,8 +37,8 @@ L["config_search_freq_table_cleared"] = "Häufigkeitsdatenbank zurückgesetzt"
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Inhalt der Suchdatenbank:"
 L["PRINT_SEARCH_DATA_FREQ"] = "Inhalt der Häufigkeitsdatenbank:"
-L["INDEX_HEADER"] = "Suchdatenbank erfolgreich neu aufgebaut."
-L["INDEX_DISABLED"] = "  Aktiviert: "
-L["INDEX_ENABLED"] = "  Deaktiviert: "
+L["INDEX_HEADER"] = "Suchdatenbank erfolgreich aktualisiert."
+L["INDEX_DISABLED"] = "  Deaktiviert: "
+L["INDEX_ENABLED"] = "  Aktiviert: "
 
 end

@@ -3,6 +3,35 @@ local L = LibStub("AceLocale-3.0"):GetLocale("KeystrokeLauncher")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
+-- CONSTANTS
+local SearchIndexType = Enumm {
+    ADDON = { icon = 'blau'},
+    MACRO = { icon = 'dunkel_grün'},
+    SPELL = { icon = 'dunkel_lila'},
+    CMD = { icon = 'gelb'},
+    ITEM = { icon = 'hell_grün'},
+    MOUNT = { icon = 'khaki'},
+    EQUIP_SET = { icon = 'türkis'},
+    BLIZZ_FRAME = { icon = 'schokolade'}
+}
+-- local SearchIndexType = Enumm {
+--     ADDON = '0',
+--     MACRO = '0',
+--     SPELL = '0',
+--     CMD = '0',
+--     ITEM = '0',
+--     MOUNT = '0',
+--     EQUIP_SET = '0',
+--     BLIZZ_FRAME = '0'
+-- }
+local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
+
+for k,v in pairs(SearchIndexType) do
+    for k1,v1 in pairs(v) do
+        print(k1, v1)
+    end
+end
+
 function KeystrokeLauncher:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherDB")
     if self.db.char.keybindingModifiers == nil then
@@ -12,7 +41,18 @@ function KeystrokeLauncher:OnInitialize()
         self.db.char.searchDataFreq = {}
     end
     if self.db.char.searchDataWhatIndex == nil then
-        self.db.char.searchDataWhatIndex = {["spells"] = true, ["items"] = true}
+        self.db.char.searchDataWhatIndex = {
+            [SearchIndexType.SPELL] = true, 
+            [SearchIndexType.ITEM] = true,
+            [SearchIndexType.EQUIP_SET] = true,
+            [SearchIndexType.BLIZZ_FRAME] = true,
+            [SearchIndexType.CMD] = true
+        }
+    end
+    if self.db.char.kl == nil then
+        self.db.char.kl = {}
+        self.db.char.kl['debug'] = false
+        self.db.char.kl['show_tooltips'] = true
     end
     if not SEARCH_TABLE_INIT_DONE then
         C_Timer.After(2, function()
@@ -33,32 +73,33 @@ function KeystrokeLauncher:OnInitialize()
                 name = L["config_hide_name"],
                 desc = L["config_hide_desc"],
                 type = "execute",
-                func = function() AceConfigDialog:Close("KeystrokeLauncher") end,
+                func = function() AceConfigDialog:Close("KeystrokeLauncherOptions") end,
+                guiHidden = true
             },
             show = {
                 order = 2,
                 name = L["config_show_name"],
                 desc = L["config_show_desc"],
                 type = "execute",
-                func = function() AceConfigDialog:Open("KeystrokeLauncher") end,
+                func = function() AceConfigDialog:Open("KeystrokeLauncherOptions") end,
                 guiHidden = true
             },
-            reset = {
-                order = 3,
-                name = L["config_reset_name"],
-                desc = L["config_reset_desc"],
-                type = "execute",
-                confirm = true,
-                confirmText = L["config_reset_confirmText"],
-                func = function()
-                    for k,v in pairs(self.db.char) do
-                        self.db.char[k] = nil
-                    end
-                    ReloadUI()
-                end
+            look_n_feel = {
+                order = 10,
+                name = "Look & Feel",
+                type = "group",
+                args = {
+                    show_tooltip = {
+                        name = "Show Tooltip",
+                        desc = "Enables / disables the tooltips",
+                        type = "toggle",
+                        set = function(info, val) self.db.char.kl['show_tooltips'] = val end,
+                        get = function(info) return self.db.char.kl['show_tooltips'] end
+                    },
+                }
             },
             keybindings = {
-                order = 4,
+                order = 20,
                 name = L["config_keybinding"],
                 type = "group",
                 args = {
@@ -86,7 +127,7 @@ function KeystrokeLauncher:OnInitialize()
                 }
             },
             search_table = {
-                order = 5,
+                order = 30,
                 name = L["config_search_table_name"],
                 type = "group",
                 args = {
@@ -121,20 +162,22 @@ function KeystrokeLauncher:OnInitialize()
                         order = 6,
                         name = L["config_search_table_index"],
                         type = "multiselect",
-                        values = {
-                            items = "items",
-                            addons = "addons",
-                            macros = "macros",
-                            spells = "spells",
-                            mounts = "mounts"
-                        },
+                        values = function()
+                            rv = {}
+                            for k,v in pairs(SearchIndexType) do
+                                for k1,v1 in pairs(v) do
+                                    rv[k1] = L['CONFIG_INDEX_TYPES_'..k1]
+                                end
+                            end
+                            return rv
+                        end,
                         set = function(info, key, state) self.db.char.searchDataWhatIndex[key] = state end,
                         get = function(info, key) return self.db.char.searchDataWhatIndex[key] end,
                     }
                 }
             },
             search_freq = {
-                order = 6,
+                order = 40,
                 name = L["config_search_freq_table_name"],
                 type = "group",
                 args = {
@@ -158,12 +201,44 @@ function KeystrokeLauncher:OnInitialize()
                         func = function() print_search_data_freq(self) end
                     }
                 }
+            },
+            advanced = {
+                order = 50,
+                name = "Advanced Settings",
+                type = "group",
+                args = {
+                    reset = {
+                        name = L["config_reset_name"],
+                        desc = L["config_reset_desc"],
+                        type = "execute",
+                        confirm = true,
+                        confirmText = L["config_reset_confirmText"],
+                        func = function()
+                            for k,v in pairs(self.db.char) do
+                                self.db.char[k] = nil
+                            end
+                            ReloadUI()
+                        end
+                    },
+                    mem = {
+                        name = "Print memory usage to console",
+                        type = "execute",
+                        func = function() self:Print(get_mem_usage()) end
+                    },
+                    debug = {
+                        name = "Debug",
+                        desc = "Enables / disables debug mode",
+                        type = "toggle",
+                        set = function(info, val) self.db.char.kl['debug'] = val end,
+                        get = function(info) return self.db.char.kl['debug'] end
+                    },
+                }
             }
         }
     }
     options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db) -- enable profiles
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("KeystrokeLauncher", options, {"kl", "keystrokelauncher"})
-    AceConfigDialog:AddToBlizOptions("KeystrokeLauncher")
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("KeystrokeLauncherOptions", options, {"kl", "keystrokelauncher"})
+    AceConfigDialog:AddToBlizOptions("KeystrokeLauncherOptions", "Keystroke Launcher")
 
     --[=====[ GLOBAL KEYBOARD LISTENER --]=====]
     KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
@@ -198,10 +273,6 @@ function check_key_bindings(self, keyboard_key)
         end
     end
 
-    --self:Print("Key:", keyboard_key)
-    --self:Print("Pressed:", dump(pressedButtons))
-    --self:Print("Merged:", dump(mergedKeybindings))
-
     -- compare both tables for exakt equality
     if table.length(pressedButtons) == table.length(mergedKeybindings) then
         local showWindow = true
@@ -215,16 +286,36 @@ function check_key_bindings(self, keyboard_key)
     return false
 end
 
+function debug(...)
+    local arg={...}
+    self = arg[1]
+    -- print(dump(arg))
+    -- print(n)
+    if self.db.char.kl['debug'] then
+        printResult = ''
+        for i,v in ipairs(arg) do
+            if i > 1 then
+                -- print(i, v)
+                printResult = printResult..v
+            end
+        end
+        self:Print("DEBUG", printResult)
+    end
+end
+
 function show_main_frame(self)
     KL_MAIN_FRAME = AceGUI:Create("Frame")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
-    KL_MAIN_FRAME:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
-    KL_MAIN_FRAME:SetCallback("OnRelease", function(widget) 
-        C_Timer.After(0.1, function() 
-            --self:Print("Keybinding cleared")
+    KL_MAIN_FRAME:SetCallback("OnClose", function(widget) 
+        C_Timer.After(0.2, function() 
+            debug(self, "Keybinding cleared")
             ClearOverrideBindings(KeyboardListenerFrame) 
         end)
+        AceGUI:Release(widget) 
+        debug(self, "KL_MAIN_FRAME OnClose: Releasing")
     end)
+    -- KL_MAIN_FRAME:SetCallback("OnRelease", function(widget) 
+    -- end)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(400)
     KL_MAIN_FRAME:SetHeight(300)
@@ -244,7 +335,7 @@ function show_main_frame(self)
         end
     end)
     --SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(key=='ENTER')
-    SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) KL_MAIN_FRAME:Release() end)
+    SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) hide_all() end)
     SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value) show_results(self, value) end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
 
@@ -257,10 +348,13 @@ function show_main_frame(self)
     SCROLLCONTAINER.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
         if keyboard_key == 'ENTER' then
             execute_macro(self)
+        elseif keyboard_key == 'ESCAPE' then
+            hide_all()
         else
             move_selector(self, keyboard_key) 
         end
     end)
+    -- SCROLLCONTAINER.frame:SetScript("OnEscapePressed", function(self) hide_all() end)
     KL_MAIN_FRAME:AddChild(SCROLLCONTAINER)
 
     -- SCROLL frame
@@ -268,59 +362,91 @@ function show_main_frame(self)
     SCROLL:SetLayout("Flow")
     SCROLLCONTAINER:AddChild(SCROLL)
 
+    EXECUTED = false
     KL_MAIN_FRAME:Show()
-end
+    debug(self, '---------')
+end 
 
 -- execute_macro means effectively propagate then close the main window
 function execute_macro(self)
-    -- save freq
-    current_search = SEARCH_EDITBOX:GetText()
-    if is_nil_or_empty(current_search) then
-        current_search = 'EMPTY'
-    end
-    freq = 1
-    if self.db.char.searchDataFreq[current_search] then
-        -- only increase by one, if it is not a different key
-        if self.db.char.searchDataFreq[current_search].key == CURRENTLY_SELECTED_LABEL_KEY then
-            freq = self.db.char.searchDataFreq[current_search].freq + 1
+    -- due to the key beeing propagated, this method is executed twice sometimes
+    if not EXECUTED then
+        SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
+        KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
+        SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
+        -- save freq
+        current_search = SEARCH_EDITBOX:GetText()
+        if is_nil_or_empty(current_search) then
+            current_search = 'EMPTY'
         end
+        freq = 1
+        if self.db.char.searchDataFreq[current_search] then
+            -- only increase by one, if it is not a different key
+            if self.db.char.searchDataFreq[current_search].key == CURRENTLY_SELECTED_LABEL_KEY then
+                freq = self.db.char.searchDataFreq[current_search].freq + 1
+            end
+        end
+        self.db.char.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
+        -- propagate and close
+        hide_all()
+        debug(self, "execute_macro "..CURRENTLY_SELECTED_LABEL_KEY..", "..get_mem_usage())
+        EXECUTED = true
     end
-    self.db.char.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
-    -- propagate and close
-    SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
-    KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
-    SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
-    KL_MAIN_FRAME:Hide()
 end
 
-function get_freq(self, key)
-    for k,v in pairs(self.db.char.searchDataFreq) do
-        if v.key == key then
-            return v.freq
-        end
-    end
-    return 0
+function hide_all()
+    KL_MAIN_FRAME:Hide()
+    GameTooltip:Hide()
 end
+
 
 function print_search_data_freq(self)
     self:Print(L["PRINT_SEARCH_DATA_FREQ"])
     for k,v in pairs(self.db.char.searchDataFreq) do
-        self:Print('',k,v.freq,v.key)
+        self:Print('', el(k, 8), el(v.freq, 3), v.key)
     end
+end
+
+function el(text, target_len)
+    text = tostring(text)
+    rv = ''
+    repeat
+        rv = rv..' '
+    until (rv:len() + text:len()) == target_len
+    return text..rv
 end
 
 function print_search_data_table(self)
     self:Print(L["PRINT_SEARCH_DATA_TABLE"])
     local search_data_table_sorted = sort_search_data_table(self)
     for k,v in ipairs(search_data_table_sorted) do
-        self:Print('',v[1])
+        self:Print('', v[1])
     end
 end
 
-function sort_search_data_table(self)
+function get_freq(self, key, current_filter)
+    -- when there's an entry for current_filter, that always comes on top
+    local db_entry = self.db.char.searchDataFreq[current_filter]
+    if db_entry then
+        if db_entry.key == key then
+            return 1000 + db_entry.freq
+        end
+    end
+    -- else sum up how often key was executed, 0 is default
+    freq = 0
+    for filter, v in pairs(self.db.char.searchDataFreq) do
+        if v.key == key then
+            freq = freq + v.freq
+        end
+    end
+    return freq
+end
+
+function sort_search_data_table(self, filter)
     local search_data_table_sorted = {}
-    for k, v in pairs(self.db.char.searchDataTable) do
-        table.insert(search_data_table_sorted, {k, get_freq(self, k)})
+    for key, v in pairs(self.db.char.searchDataTable) do
+        freq = get_freq(self, key, filter)
+        table.insert(search_data_table_sorted, {key, freq})
     end
     table.sort(search_data_table_sorted, function(a,b) 
         return a[2] > b[2]
@@ -336,30 +462,63 @@ function show_results(self, filter)
     SCROLL:ReleaseChildren() -- clear all and start from fresh
 
     -- sort data by combinng two tables
-    local search_data_table_sorted = sort_search_data_table(self)
+    local search_data_table_sorted = sort_search_data_table(self, filter)
 
     local counter = 0
     for k,v in ipairs(search_data_table_sorted) do
         local key = v[1]
         if key:lower():find(filter) then
-            local slash_cmd = self.db.char.searchDataTable[key].slash_cmd
+            local frame = AceGUI:Create("SimpleGroup")
+            frame:SetLayout("flow")
+            frame:SetWidth(390)
+
+            -- spell/ macro/ etc
+            key_data = self.db.char.searchDataTable[key]
             local label = AceGUI:Create("InteractiveLabel")
-            label:SetText(key)
-            label:SetWidth(390)
-            label:SetUserData("orig_text", key)
+            if self.db.char.kl['debug'] then
+                label:SetText(key.." ("..get_freq(self, key, filter)..")")
+            else
+                label:SetText(key)
+            end
+            if key_data.icon then
+                label:SetImage(key_data.icon)
+            else
+                label:SetImage(ICON_BASE_PATH..'transparent.blp')
+            end
+            label:SetWidth(330)
+            label:SetHeight(15)
+            label:SetFont(GameFontNormal:GetFont(), 13)
             label:SetCallback("OnClick", function() 
                 -- cant propagate mouse clicks, so need to press enter after selecting
                 select_label(self, key)
-                --edit_master_marco(self, slash_cmd)
             end)
-            SCROLL:AddChild(label)
+            frame:AddChild(label)
+            
+            -- index type icon
+            local icon = AceGUI:Create("Icon")
+            icon:SetImage(get_icon_for_index_type(key_data.type))
+            icon:SetImageSize(10, 10)
+            icon:SetWidth(10)
+            icon:SetHeight(10)
+            frame:AddChild(icon)
+
+            SCROLL:AddChild(frame)
             table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})
             -- the first entry is always the one we want to execute per default
             if counter == 0 then
-                --edit_master_marco(self, slash_cmd)
                 select_label(self, key)
             end
             counter = counter + 1
+        end
+    end
+end
+
+function get_icon_for_index_type(index_type)
+    for k,v in pairs(SearchIndexType) do
+        for k1,v1 in pairs(v) do
+            if k1 == index_type then
+                return ICON_BASE_PATH..v1.icon..".blp"
+            end
         end
     end
 end
@@ -374,6 +533,7 @@ function move_selector(self, keyboard_key)
 end
 
 function select_label(self, key, index)
+    debug(self, "select_label", key, index)
     for k, v in pairs(SEARCH_TABLE_TO_LABEL) do
         -- differnt if logic depening on call with key or index
         local go = false
@@ -383,14 +543,31 @@ function select_label(self, key, index)
             go = v.key == key
         end
         if go then
-            --v.label:SetText(v.label:GetUserData("orig_text") ..' (sel)'..k)
+            -- currently selected entry
             v.label:SetColor(255, 0, 0, 1)
             CURRENTLY_SELECTED_LABEL_INDEX = k
             CURRENTLY_SELECTED_LABEL_KEY = v.key
             edit_master_marco(self, v.key)
+            display_tooltip(self, v.key, v.label.frame)
         else
-            --v.label:SetText(v.label:GetUserData("orig_text")..k)
             v.label:SetColor(255, 255, 255, 1)
+        end
+    end
+end
+
+function display_tooltip(self, key, owner)
+    if self.db.char.kl['show_tooltips'] then
+        local detailed_data = self.db.char.searchDataTable[key]
+        if detailed_data['tooltipItemString'] then
+            GameTooltip:SetOwner(owner, nil, -10)
+            GameTooltip:SetHyperlink(detailed_data['tooltipItemString'])
+            GameTooltip:Show()
+        elseif detailed_data['tooltipText'] then
+            GameTooltip:SetOwner(owner, nil, -10)
+            GameTooltip:SetText(detailed_data['tooltipText'], nil, nil, nil, nil, true)
+            GameTooltip:Show()
+        else
+            GameTooltip:Hide()
         end
     end
 end
@@ -404,6 +581,27 @@ function edit_master_marco(self, key, keyboard_key)
     EditMacro(macroId, nil, nil, body, 1, 1); 
     SetOverrideBindingMacro(KeyboardListenerFrame, true, keyboard_key, macroId)
     KL_MAIN_FRAME:SetStatusText(body)
+    debug(self, "edit_master_marco body="..body)
+end
+
+-- http://www.wowinterface.com/forums/showthread.php?t=9210
+function get_mem_usage()
+    UpdateAddOnMemoryUsage()
+    mem = GetAddOnMemoryUsage("keystrokelauncher")
+    return formatNumber(mem,"%.1f \124cffffd200k")
+end
+
+-- from http://www.wowinterface.com/downloads/info7362-AddonUsage.html
+function formatNumber(number, pattern)
+    local isBig = number>=1000
+    number = string.format(pattern,number)
+	if isBig then
+	    local subCount
+	    repeat
+	        number,subCount = number:gsub("^(-?%d+)(%d%d%d)","%1,%2")
+	    until subCount==0
+	end
+  return number
 end
 
 function fill_search_data_table(self)
@@ -412,7 +610,7 @@ function fill_search_data_table(self)
     local disabled = L["INDEX_DISABLED"]
     local enabled = L["INDEX_ENABLED"]
 
-    if self.db.char.searchDataWhatIndex["addons"] then
+    if self.db.char.searchDataWhatIndex[SearchIndexType.ADDON] then
         for i=1, GetNumAddOns() do 
             name, title, notes, addonenabled = GetAddOnInfo(i)
             if notes == nil then
@@ -422,13 +620,21 @@ function fill_search_data_table(self)
                 local slash_cmd = '/'..name:lower()
                 -- only add if slash command exists
                 if slash_cmd_exists(slash_cmd) then
-                    db_search[name] = {slash_cmd=slash_cmd, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+                    db_search[name] = {
+                        slash_cmd=slash_cmd, 
+                        tooltipText=name.."\n"..title.."\n"..notes,
+                         type=SearchIndexType.ADDON
+                        }
                 else
                     -- no slash command exists, let's see if we can find something in _G['SLASH_...']
                     for k, v in pairs(_G) do
                         if k:find('SLASH_') then
                             if k:lower():find(name:lower()) then
-                                db_search[name] = {slash_cmd=v, is_slash=true, tooltipText=name.."\n"..title.."\n"..notes}
+                                db_search[name] = {
+                                    slash_cmd=v, 
+                                    tooltipText=name.."\n"..title.."\n"..notes, 
+                                    type=SearchIndexType.ADDON
+                                }
                             end
                         end
                     end
@@ -441,21 +647,30 @@ function fill_search_data_table(self)
     end
 
     -- add macros
-    if self.db.char.searchDataWhatIndex["macros"] then
+    if self.db.char.searchDataWhatIndex[SearchIndexType.MACRO] then
         local numglobal, numperchar = GetNumMacros();
         for i = 1, numglobal do
             name, iconTexture, body, isLocal = GetMacroInfo(i)
             if name then
-                icon_macro_name = "|T"..iconTexture..":16|t "..name
+                --icon_macro_name = "|T"..iconTexture..":16|t "..name
                 -- why does this destroy data?
-                -- db_search[icon_macro_name] = {slash_cmd=name, is_macro=true, tooltipText=body}
+                db_search[name] = {
+                    slash_cmd="/cast"..name, 
+                    icon=iconTexture, 
+                    tooltipText=body, 
+                    type=SearchIndexType.MACRO
+                }
             end
         end
         for i = 1, numperchar do
             name, iconTexture, body, isLocal = GetMacroInfo(i + 120)
             if name then
-                icon_macro_name = "|T"..iconTexture..":16|t "..name
-                db_search[icon_macro_name] = {slash_cmd="/cast "..name, is_macro=true, tooltipText=body}
+                db_search[name] = {
+                    slash_cmd="/cast "..name, 
+                    icon=iconTexture, 
+                    tooltipText=body, 
+                    type=SearchIndexType.MACRO
+                }
             end
         end
         enabled = enabled.."macros "
@@ -464,22 +679,24 @@ function fill_search_data_table(self)
     end
 
     -- add spells
-    if self.db.char.searchDataWhatIndex["spells"] then
+    if self.db.char.searchDataWhatIndex[SearchIndexType.SPELL] then
         local i = 1
         while true do
             local spellName, spellSubName = GetSpellBookItemName(i, BOOKTYPE_SPELL)
             if not spellName then
                 do break end
             end
-
             if IsUsableSpell(spellName) then
                 if not IsPassiveSpell(spellName) then
                     spellString, spellname = item_link_to_string(GetSpellLink(spellName))
-                    icon_spell_name = "|T"..GetSpellTexture(spellName)..":16|t "..spellName
-                    db_search[icon_spell_name] = {slash_cmd="/cast "..spellName, is_spell=true, tooltipItemString=spellString}
+                    db_search[spellName] = {
+                        slash_cmd="/cast "..spellName,
+                        icon = GetSpellTexture(spellName), 
+                        tooltipItemString=spellString,
+                        type=SearchIndexType.SPELL
+                    }
                 end
             end
-
             i = i + 1
         end
         enabled = enabled.."spells "
@@ -488,22 +705,32 @@ function fill_search_data_table(self)
     end
 
     -- manually adding some slashcommmands
-    db_search['Reload UI'] = {slash_cmd='/reload', is_slash=true}
-    db_search['Logout'] = {slash_cmd='/logout', is_slash=true}
-    db_search['/kl show'] = {slash_cmd='/kl show', is_slash=true}
-    db_search['/kl search_freq print'] = {slash_cmd='/kl search_freq print', is_slash=true}
-    db_search['Dismount'] = {slash_cmd='/dismount', is_slash=true}
+    if self.db.char.searchDataWhatIndex[SearchIndexType.CMD] then
+        db_search['Reload UI'] = {slash_cmd='/reload', tooltipText=L["DB_SEARCH_RELOAD_UI"], type=SearchIndexType.CMD}
+        db_search['Logout'] = {slash_cmd='/logout', tooltipText=L["DB_SEARCH_LOGOUT"], type=SearchIndexType.CMD}
+        db_search['/kl show'] = {slash_cmd='/kl show', tooltipText=L["DB_SEARCH_KL_SHOW"], type=SearchIndexType.CMD}
+        db_search['/kl search_freq print'] = {slash_cmd='/kl search_freq print', tooltipText=L["DB_SEARCH_KL_FREQ_PRINT"], type=SearchIndexType.CMD}
+        db_search['/kl search_table rebuild'] = {slash_cmd='/kl search_table rebuild', tooltipText=L["DB_SEARCH_KL_SEARCH_REBUILD"], type=SearchIndexType.CMD}
+        db_search['Dismount'] = {slash_cmd='/dismount', tooltipText=L["DB_SEARCH_DISMOUNT"], type=SearchIndexType.CMD}
+        enabled = enabled.."slash commands "
+    else
+        disabled = disabled.."slash commands "
+    end
 
     -- items
-    if self.db.char.searchDataWhatIndex["items"] then
+    if self.db.char.searchDataWhatIndex[SearchIndexType.ITEM] then
         for bag=0, NUM_BAG_SLOTS do
             for bagSlots=1, GetContainerNumSlots(bag) do
                 local itemLink = GetContainerItemLink(bag, bagSlots)
                 if itemLink then
                     itemString, itemName = item_link_to_string(itemLink)
                     if IsUsableItem(itemName) then
-                        icon_item_name = "|T"..GetItemIcon(itemName)..":16|t "..itemName
-                        db_search[icon_item_name] = {slash_cmd="/use "..itemName, is_item=true, tooltipItemString=itemString}
+                        db_search[itemName] = {
+                            slash_cmd="/use "..itemName, 
+                            icon = GetItemIcon(itemName),
+                            tooltipItemString=itemString,
+                            type=SearchIndexType.ITEM
+                        }
                     end
                 end
             end
@@ -514,19 +741,115 @@ function fill_search_data_table(self)
     end
 
     -- add mounts
-    if self.db.char.searchDataWhatIndex["mounts"] then
+    if self.db.char.searchDataWhatIndex[SearchIndexType.MOUNT] then
         for i=1, C_MountJournal.GetNumDisplayedMounts() do
             creatureName, spellID, icon = C_MountJournal.GetDisplayedMountInfo(i)
             spellString, spellname = item_link_to_string(GetSpellLink(spellID))
-            icon_item_name = "|T"..icon..":16|t "..creatureName
-            db_search[icon_item_name] = {slash_cmd="/cast "..creatureName, is_item=true, tooltipItemString=spellString}
+            db_search[creatureName] = {
+                slash_cmd="/cast "..creatureName, 
+                icon = icon,
+                tooltipItemString=spellString,
+                type = SearchIndexType.MOUNT
+            }
         end
         enabled = enabled.."mounts "
     else
         disabled = disabled.."mounts "
     end
     
+    -- add equip sets
+    if self.db.char.searchDataWhatIndex[SearchIndexType.EQUIP_SET] then
+        for i=0, C_EquipmentSet.GetNumEquipmentSets() do
+            local name, iconFileID, setID, isEquipped = C_EquipmentSet.GetEquipmentSetInfo(i)
+            if name then
+                db_search[name] = {
+                    slash_cmd="/equipset "..name, 
+                    icon = iconFileID,
+                    tooltipText=name,
+                    type = SearchIndexType.EQUIP_SET
+                }
+            end
+        end
+        enabled = enabled.."equip_sets "
+    else
+        disabled = disabled.."equip_sets "
+    end
+    
+    -- add blizz frames
+    if self.db.char.searchDataWhatIndex[SearchIndexType.BLIZZ_FRAME] then
+        -- global strings from https://www.townlong-yak.com/framexml/live/GlobalStrings.lua/DE
+        -- available functions: https://github.com/tomrus88/BlizzardInterfaceCode/blob/6922484b7b57ed6b3133ea54cdc828db94c7813d/Interface/FrameXML/UIParent.lua 
+        db_search[CHARACTER_BUTTON] = {
+            slash_cmd = '/run ToggleCharacter("PaperDollFrame")', 
+            tooltipText = L['OPEN']..' '..CHARACTER_BUTTON, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[SPELLBOOK_BUTTON] = {
+            slash_cmd = '/run ToggleSpellBook("spell")', 
+            tooltipText = L['OPEN']..' '..SPELLBOOK_BUTTON, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[TALENTS_BUTTON] = {
+            slash_cmd = '/run ToggleTalentFrame()', 
+            tooltipText = L['OPEN']..' '..TALENTS_BUTTON, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[FRIENDS] = {
+            slash_cmd = '/run ToggleFriendsFrame(1)', 
+            tooltipText = L['OPEN']..' '..FRIENDS, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[QUESTLOG_BUTTON] = {
+            slash_cmd = '/run ToggleQuestLog()', 
+            tooltipText = L['OPEN']..' '..QUESTLOG_BUTTON, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[LOOKINGFORGUILD ] = {
+            slash_cmd = '/run ToggleGuildFrame(1)', 
+            tooltipText = L['OPEN']..' '..LOOKINGFORGUILD , 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[GROUP_FINDER] = {
+            slash_cmd = '/run ToggleFrame(PVEFrame)', 
+            tooltipText = L['OPEN']..' '..GROUP_FINDER  , 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[ADVENTURE_JOURNAL] = {
+            slash_cmd = '/run ToggleEncounterJournal()', 
+            tooltipText = L['OPEN']..' '..ADVENTURE_JOURNAL  , 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[HELP_BUTTON] = {
+            slash_cmd = '/run ToggleHelpFrame()', 
+            tooltipText = L['OPEN']..' '..HELP_BUTTON  , 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[L['CALENDAR']] = {
+            slash_cmd = '/run if(not CalendarFrame) then LoadAddOn("Blizzard_Calendar") end Calendar_Toggle()', 
+            tooltipText = GAMETIME_TOOLTIP_TOGGLE_CALENDAR, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[ACHIEVEMENT_BUTTON] = {
+            slash_cmd = '/run ToggleAchievementFrame()', 
+            tooltipText = L['OPEN']..' '..ACHIEVEMENT_BUTTON, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[MOUNTS] = {
+            slash_cmd = '/run ToggleCollectionsJournal(1)', 
+            tooltipText = L['OPEN']..' '..MOUNTS, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+
+        enabled = enabled.."blizz_frames "
+    else
+        disabled = disabled.."blizz_frames "
+    end
+
     self:Print(L["INDEX_HEADER"])
     self:Print(enabled)
     self:Print(disabled)
+end
+
+function icon_item_string(type, icon, item_name)
+    return "|T"..icon..":16|t "..item_name
 end

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.9
+
+* NEW: enabled Tooltips again
+* NEW: added equipment sets to search index
+* FIXED: options now visible in Bliizzard Interface -> Addons
+* FIXED: search frequency is now correctly used for sorting based on the currently entered filter
+* Slightly bigger font size
+
 ## v0.8
 
 * Disabled some debug prints
