@@ -371,7 +371,6 @@ function hide_all()
     GameTooltip:Hide()
 end
 
-
 function print_search_data_freq(self)
     self:Print(L["PRINT_SEARCH_DATA_FREQ"])
     for k,v in pairs(self.db.char.searchDataFreq) do
@@ -444,7 +443,7 @@ function show_results(self, filter)
             frame:SetLayout("flow")
             frame:SetWidth(390)
 
-            -- spell/ macro/ etc
+            --[=====[ IMTERACTIVE LABEL --]=====]
             key_data = self.db.char.searchDataTable[key]
             local label = AceGUI:Create("InteractiveLabel")
             if self.db.char.kl['debug'] then
@@ -466,7 +465,7 @@ function show_results(self, filter)
             end)
             frame:AddChild(label)
             
-            -- index type icon
+            --[=====[ TYPE ICON --]=====]
             if self.db.char.kl['show_type_marker'] then
                 local icon = AceGUI:Create("Icon")
                 icon:SetImage(get_icon_for_index_type(key_data.type))
@@ -498,10 +497,30 @@ function get_icon_for_index_type(index_type)
 end
 
 function move_selector(self, keyboard_key)
-    -- but only down and up to the min and max boundaries
+    local will_fit = SCROLLCONTAINER.frame:GetHeight() / 22
+    
+    -- set initial boundaries
+    if curr_min == nil then
+        curr_min = 0
+    end
+    if curr_max == nil then
+        curr_max = will_fit
+    end
+
     if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
+        -- scroll up if not already at top
+        if CURRENTLY_SELECTED_LABEL_INDEX > 2 and CURRENTLY_SELECTED_LABEL_INDEX < curr_min + 3 then
+            curr_min = curr_min - 1
+            curr_max = curr_max - 1
+            SCROLL:SetScroll(curr_min*9)
+        end
         select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
     elseif keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
+        if CURRENTLY_SELECTED_LABEL_INDEX > curr_max - 2 then
+            curr_min = curr_min + 1
+            curr_max = curr_max + 1
+            SCROLL:SetScroll(curr_min*9)
+        end
         select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
     end
 end

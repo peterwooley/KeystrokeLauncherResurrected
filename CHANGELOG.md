@@ -4,8 +4,11 @@
 
 * NEW: enabled Tooltips again
 * NEW: added equipment sets to search index
+* NEW: added auto scrolling of window as soon as you up/down out of the boundaries. Note: does not handle resizing yet.
 * FIXED: options now visible in Bliizzard Interface -> Addons
 * FIXED: search frequency is now correctly used for sorting based on the currently entered filter
+* FIXED: sometimes the command would not trigger
+* FIXED: sometimes keyboard up/down jumped two and not one entries
 * Slightly bigger font size
 
 ## v0.8
