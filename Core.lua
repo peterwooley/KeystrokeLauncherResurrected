@@ -336,7 +336,7 @@ function show_main_frame(self)
     --         move_selector(self, keyboard_key) 
     --     end
     -- end)
-    --SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) hide_all() end)
+    SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) hide_all() end)
     SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value) show_results(self, value) end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
 
