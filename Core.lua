@@ -14,23 +14,8 @@ local SearchIndexType = Enumm {
     EQUIP_SET = { icon = 'türkis'},
     BLIZZ_FRAME = { icon = 'schokolade'}
 }
--- local SearchIndexType = Enumm {
---     ADDON = '0',
---     MACRO = '0',
---     SPELL = '0',
---     CMD = '0',
---     ITEM = '0',
---     MOUNT = '0',
---     EQUIP_SET = '0',
---     BLIZZ_FRAME = '0'
--- }
-local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
 
-for k,v in pairs(SearchIndexType) do
-    for k1,v1 in pairs(v) do
-        print(k1, v1)
-    end
-end
+local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
 
 function KeystrokeLauncher:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherDB")
@@ -134,29 +119,29 @@ function KeystrokeLauncher:OnInitialize()
                     header_one = {
                         order = 1,
                         name = L["config_search_table_header_one"],
-                        type = "header",
+                        type = "header"
                     },
                     print = {
                         order = 2,
                         name = L["config_print"],
                         type = "execute",
-                        func = function() print_search_data_table(self) end,
+                        func = function() print_search_data_table(self) end
                     },
                     rebuild = {
                         order = 3,
                         name = L["config_search_table_rebuild"],
                         type = "execute",
-                        func = function() fill_search_data_table(self) end,
+                        func = function() fill_search_data_table(self) end
                     },
                     header_two = {
                         order = 4,
                         name = L["config_search_table_header_two"],
-                        type = "header",
+                        type = "header"
                     },
                     desc = {
                         order = 5,
                         name = L["config_search_table_desc"],
-                        type = "description",
+                        type = "description"
                     },
                     index = {
                         order = 6,
@@ -184,7 +169,7 @@ function KeystrokeLauncher:OnInitialize()
                     description = {
                         order = 1,
                         name = L["config_search_freq_table_desc"],
-                        type = "header",
+                        type = "header"
                     },
                     clear = {
                         name = L["config_search_freq_table_clear_name"],
@@ -242,12 +227,14 @@ function KeystrokeLauncher:OnInitialize()
 
     --[=====[ GLOBAL KEYBOARD LISTENER --]=====]
     KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
-    KeyboardListenerFrame:EnableKeyboard(true)
+    --KeyboardListenerFrame:EnableKeyboard(true)
     KeyboardListenerFrame:SetPropagateKeyboardInput(true)
     KeyboardListenerFrame:SetScript("OnKeyDown", function(widget, keyboard_key)
+        print("--> ", keyboard_key)
         if check_key_bindings(self, keyboard_key) then
             show_main_frame(self)
             show_results(self)
+            --CURRENTLY_PRESSED_KEY = keyboard_key
         end
     end)
 end
@@ -286,7 +273,7 @@ function check_key_bindings(self, keyboard_key)
     return false
 end
 
-function debug(...)
+function dprint(...)
     local arg={...}
     self = arg[1]
     -- print(dump(arg))
@@ -304,94 +291,115 @@ function debug(...)
 end
 
 function show_main_frame(self)
+    --[=====[ KL_MAIN_FRAME --]=====]
     KL_MAIN_FRAME = AceGUI:Create("Frame")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
     KL_MAIN_FRAME:SetCallback("OnClose", function(widget) 
         C_Timer.After(0.2, function() 
-            debug(self, "Keybinding cleared")
+            dprint(self, "Keybinding cleared")
             ClearOverrideBindings(KeyboardListenerFrame) 
         end)
         AceGUI:Release(widget) 
-        debug(self, "KL_MAIN_FRAME OnClose: Releasing")
+        dprint(self, "KL_MAIN_FRAME OnClose: Releasing")
     end)
     -- KL_MAIN_FRAME:SetCallback("OnRelease", function(widget) 
     -- end)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(400)
     KL_MAIN_FRAME:SetHeight(300)
+    --KL_MAIN_FRAME.frame:EnableKeyboard(true)
     KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(false)
+    KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
+        print("KL_MAIN_FRAME OnKeyDown")
+        SEARCH_EDITBOX:SetFocus()
+        if keyboard_key == 'ENTER' then
+            execute_macro(self)
+        -- elseif keyboard_key == 'ESCAPE' then
+        --     hide_all()
+        elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
+            move_selector(self, keyboard_key) 
+        end
+    end)
 
-    -- search edit box
+    --[=====[ SEARCH_EDITBOX --]=====]
     SEARCH_EDITBOX = AceGUI:Create("EditBox")
     SEARCH_EDITBOX:SetFullWidth(true)
     SEARCH_EDITBOX:SetFocus()
     SEARCH_EDITBOX:DisableButton(true)
-    SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(false)
-    SEARCH_EDITBOX.editbox:SetScript("OnKeyDown", function(widget, keyboard_key)
-        if keyboard_key == 'ENTER' then
-            execute_macro(self)
-        else
-            move_selector(self, keyboard_key) 
-        end
-    end)
-    --SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(key=='ENTER')
-    SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) hide_all() end)
+    --SEARCH_EDITBOX.editbox:EnableKeyboard(true)
+    SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
+    -- SEARCH_EDITBOX.editbox:SetScript("OnKeyDown", function(widget, keyboard_key)
+    --     print("SEARCH_EDITBOX OnKeyDown")
+    --     if keyboard_key == 'ENTER' then
+    --         execute_macro(self)
+    --     elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
+    --         move_selector(self, keyboard_key) 
+    --     end
+    -- end)
+    --SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) hide_all() end)
     SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value) show_results(self, value) end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
 
-    -- SCROLL container/ group
-    SCROLLCONTAINER = AceGUI:Create("SimpleGroup") -- "InlineGroup" is also good
+    --[=====[ SCROLLCONTAINER --]=====]
+    SCROLLCONTAINER = AceGUI:Create("SimpleGroup")
     SCROLLCONTAINER:SetFullWidth(true)
     SCROLLCONTAINER:SetFullHeight(true)
     SCROLLCONTAINER:SetLayout("Fill")
-    SCROLLCONTAINER.frame:SetPropagateKeyboardInput(false)
-    SCROLLCONTAINER.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
-        if keyboard_key == 'ENTER' then
-            execute_macro(self)
-        elseif keyboard_key == 'ESCAPE' then
-            hide_all()
-        else
-            move_selector(self, keyboard_key) 
-        end
-    end)
-    -- SCROLLCONTAINER.frame:SetScript("OnEscapePressed", function(self) hide_all() end)
+    SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
+    -- print(SCROLLCONTAINER.frame:GetScript("OnKeyDown"))
+    -- if SCROLLCONTAINER.frame:GetScript("OnKeyDown") == nil then
+    --     SCROLLCONTAINER.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
+    --         print("SCROLLCONTAINER OnKeyDown")
+    --         --print(debugstack())
+    --         SEARCH_EDITBOX:SetFocus()
+    --         if keyboard_key == 'ENTER' then
+    --             execute_macro(self)
+    --         elseif keyboard_key == 'ESCAPE' then
+    --             hide_all()
+    --         elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
+    --             move_selector(self, keyboard_key) 
+    --         end
+    --     end)
+    -- end
     KL_MAIN_FRAME:AddChild(SCROLLCONTAINER)
 
-    -- SCROLL frame
+    --[=====[ SCROLL --]=====]
     SCROLL = AceGUI:Create("ScrollFrame")
     SCROLL:SetLayout("Flow")
     SCROLLCONTAINER:AddChild(SCROLL)
 
     EXECUTED = false
     KL_MAIN_FRAME:Show()
-    debug(self, '---------')
+    dprint(self, '---------')
 end 
 
 -- execute_macro means effectively propagate then close the main window
 function execute_macro(self)
     -- due to the key beeing propagated, this method is executed twice sometimes
-    if not EXECUTED then
-        SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
-        KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
-        SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
-        -- save freq
-        current_search = SEARCH_EDITBOX:GetText()
-        if is_nil_or_empty(current_search) then
-            current_search = 'EMPTY'
-        end
-        freq = 1
-        if self.db.char.searchDataFreq[current_search] then
-            -- only increase by one, if it is not a different key
-            if self.db.char.searchDataFreq[current_search].key == CURRENTLY_SELECTED_LABEL_KEY then
-                freq = self.db.char.searchDataFreq[current_search].freq + 1
-            end
-        end
-        self.db.char.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
-        -- propagate and close
-        hide_all()
-        debug(self, "execute_macro "..CURRENTLY_SELECTED_LABEL_KEY..", "..get_mem_usage())
-        EXECUTED = true
+    -- if not EXECUTED then
+    --SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
+    KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
+    --SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
+    
+    -- save freq
+    local current_search = SEARCH_EDITBOX:GetText()
+    if is_nil_or_empty(current_search) then
+        current_search = 'EMPTY'
     end
+    local freq = 1
+    local current_search_freq = self.db.char.searchDataFreq[current_search]
+    if current_search_freq then
+        -- only increase by one, if it is not a different key
+        if current_search_freq.key == CURRENTLY_SELECTED_LABEL_KEY then
+            freq = current_search_freq.freq + 1
+        end
+    end
+    self.db.char.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
+    -- propagate and close
+    hide_all()
+    dprint(self, "execute_macro "..CURRENTLY_SELECTED_LABEL_KEY..", "..get_mem_usage())
+    -- EXECUTED = true
+    -- end
 end
 
 function hide_all()
@@ -476,7 +484,7 @@ function show_results(self, filter)
             key_data = self.db.char.searchDataTable[key]
             local label = AceGUI:Create("InteractiveLabel")
             if self.db.char.kl['debug'] then
-                label:SetText(key.." ("..get_freq(self, key, filter)..")")
+                label:SetText(key.." ("..get_freq(self, key, filter)..") (idx: "..k..")")
             else
                 label:SetText(key)
             end
@@ -526,14 +534,16 @@ end
 function move_selector(self, keyboard_key)
     -- but only down and up to the min and max boundaries
     if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
+        dprint(self, "move_selector", keyboard_key, CURRENTLY_SELECTED_LABEL_INDEX)
         select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
     elseif keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
+        dprint(self, "move_selector", keyboard_key, CURRENTLY_SELECTED_LABEL_INDEX)
         select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
     end
 end
 
 function select_label(self, key, index)
-    debug(self, "select_label", key, index)
+    dprint(self, "select_label", key, index)
     for k, v in pairs(SEARCH_TABLE_TO_LABEL) do
         -- differnt if logic depening on call with key or index
         local go = false
@@ -581,7 +591,7 @@ function edit_master_marco(self, key, keyboard_key)
     EditMacro(macroId, nil, nil, body, 1, 1); 
     SetOverrideBindingMacro(KeyboardListenerFrame, true, keyboard_key, macroId)
     KL_MAIN_FRAME:SetStatusText(body)
-    debug(self, "edit_master_marco body="..body)
+    dprint(self, "edit_master_marco body="..body)
 end
 
 -- http://www.wowinterface.com/forums/showthread.php?t=9210
