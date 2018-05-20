@@ -227,14 +227,11 @@ function KeystrokeLauncher:OnInitialize()
 
     --[=====[ GLOBAL KEYBOARD LISTENER --]=====]
     KeyboardListenerFrame = CreateFrame("Frame", "KeyboardListener", UIParent);
-    --KeyboardListenerFrame:EnableKeyboard(true)
     KeyboardListenerFrame:SetPropagateKeyboardInput(true)
     KeyboardListenerFrame:SetScript("OnKeyDown", function(widget, keyboard_key)
-        print("--> ", keyboard_key)
         if check_key_bindings(self, keyboard_key) then
             show_main_frame(self)
             show_results(self)
-            --CURRENTLY_PRESSED_KEY = keyboard_key
         end
     end)
 end
@@ -276,13 +273,10 @@ end
 function dprint(...)
     local arg={...}
     self = arg[1]
-    -- print(dump(arg))
-    -- print(n)
     if self.db.char.kl['debug'] then
         printResult = ''
         for i,v in ipairs(arg) do
             if i > 1 then
-                -- print(i, v)
                 printResult = printResult..v
             end
         end
@@ -296,24 +290,19 @@ function show_main_frame(self)
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
     KL_MAIN_FRAME:SetCallback("OnClose", function(widget) 
         C_Timer.After(0.2, function() 
-            dprint(self, "Keybinding cleared")
             ClearOverrideBindings(KeyboardListenerFrame) 
         end)
         AceGUI:Release(widget) 
-        dprint(self, "KL_MAIN_FRAME OnClose: Releasing")
     end)
-    -- KL_MAIN_FRAME:SetCallback("OnRelease", function(widget) 
-    -- end)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(400)
     KL_MAIN_FRAME:SetHeight(300)
-    --KL_MAIN_FRAME.frame:EnableKeyboard(true)
     KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(false)
     KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
-        print("KL_MAIN_FRAME OnKeyDown")
         SEARCH_EDITBOX:SetFocus()
         if keyboard_key == 'ENTER' then
             execute_macro(self)
+        -- no clue why, but this leads to the main configuration window not propagatint esc key
         -- elseif keyboard_key == 'ESCAPE' then
         --     hide_all()
         elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
@@ -326,16 +315,7 @@ function show_main_frame(self)
     SEARCH_EDITBOX:SetFullWidth(true)
     SEARCH_EDITBOX:SetFocus()
     SEARCH_EDITBOX:DisableButton(true)
-    --SEARCH_EDITBOX.editbox:EnableKeyboard(true)
     SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
-    -- SEARCH_EDITBOX.editbox:SetScript("OnKeyDown", function(widget, keyboard_key)
-    --     print("SEARCH_EDITBOX OnKeyDown")
-    --     if keyboard_key == 'ENTER' then
-    --         execute_macro(self)
-    --     elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
-    --         move_selector(self, keyboard_key) 
-    --     end
-    -- end)
     SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function(self) hide_all() end)
     SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value) show_results(self, value) end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
@@ -346,21 +326,6 @@ function show_main_frame(self)
     SCROLLCONTAINER:SetFullHeight(true)
     SCROLLCONTAINER:SetLayout("Fill")
     SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
-    -- print(SCROLLCONTAINER.frame:GetScript("OnKeyDown"))
-    -- if SCROLLCONTAINER.frame:GetScript("OnKeyDown") == nil then
-    --     SCROLLCONTAINER.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
-    --         print("SCROLLCONTAINER OnKeyDown")
-    --         --print(debugstack())
-    --         SEARCH_EDITBOX:SetFocus()
-    --         if keyboard_key == 'ENTER' then
-    --             execute_macro(self)
-    --         elseif keyboard_key == 'ESCAPE' then
-    --             hide_all()
-    --         elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
-    --             move_selector(self, keyboard_key) 
-    --         end
-    --     end)
-    -- end
     KL_MAIN_FRAME:AddChild(SCROLLCONTAINER)
 
     --[=====[ SCROLL --]=====]
@@ -368,18 +333,12 @@ function show_main_frame(self)
     SCROLL:SetLayout("Flow")
     SCROLLCONTAINER:AddChild(SCROLL)
 
-    EXECUTED = false
     KL_MAIN_FRAME:Show()
-    dprint(self, '---------')
 end 
 
 -- execute_macro means effectively propagate then close the main window
 function execute_macro(self)
-    -- due to the key beeing propagated, this method is executed twice sometimes
-    -- if not EXECUTED then
-    --SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
     KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
-    --SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
     
     -- save freq
     local current_search = SEARCH_EDITBOX:GetText()
@@ -398,8 +357,6 @@ function execute_macro(self)
     -- propagate and close
     hide_all()
     dprint(self, "execute_macro "..CURRENTLY_SELECTED_LABEL_KEY..", "..get_mem_usage())
-    -- EXECUTED = true
-    -- end
 end
 
 function hide_all()
@@ -534,16 +491,13 @@ end
 function move_selector(self, keyboard_key)
     -- but only down and up to the min and max boundaries
     if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
-        dprint(self, "move_selector", keyboard_key, CURRENTLY_SELECTED_LABEL_INDEX)
         select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
     elseif keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
-        dprint(self, "move_selector", keyboard_key, CURRENTLY_SELECTED_LABEL_INDEX)
         select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
     end
 end
 
 function select_label(self, key, index)
-    dprint(self, "select_label", key, index)
     for k, v in pairs(SEARCH_TABLE_TO_LABEL) do
         -- differnt if logic depening on call with key or index
         local go = false
@@ -858,8 +812,4 @@ function fill_search_data_table(self)
     self:Print(L["INDEX_HEADER"])
     self:Print(enabled)
     self:Print(disabled)
-end
-
-function icon_item_string(type, icon, item_name)
-    return "|T"..icon..":16|t "..item_name
 end
