@@ -9,6 +9,7 @@
 * FIXED: search frequency is now correctly used for sorting based on the currently entered filter
 * FIXED: sometimes the command would not trigger
 * FIXED: sometimes keyboard up/down jumped two and not one entries
+* FIXED: summon mount now by spell name and not creature name. Sometimes it is different (eg for the Chauffeured Mechano-Hog).
 * Slightly bigger font size
 
 ## v0.8

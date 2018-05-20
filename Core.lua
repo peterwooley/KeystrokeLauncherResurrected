@@ -602,6 +602,7 @@ function fill_search_data_table(self)
     local disabled = L["INDEX_DISABLED"]
     local enabled = L["INDEX_ENABLED"]
 
+    --[=====[ ADDON --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.ADDON] then
         for i=1, GetNumAddOns() do 
             name, title, notes, addonenabled = GetAddOnInfo(i)
@@ -638,14 +639,12 @@ function fill_search_data_table(self)
         disabled = disabled.."addons "
     end
 
-    -- add macros
+    --[=====[ MACROS --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.MACRO] then
         local numglobal, numperchar = GetNumMacros();
         for i = 1, numglobal do
             name, iconTexture, body, isLocal = GetMacroInfo(i)
             if name then
-                --icon_macro_name = "|T"..iconTexture..":16|t "..name
-                -- why does this destroy data?
                 db_search[name] = {
                     slash_cmd="/cast"..name, 
                     icon=iconTexture, 
@@ -670,7 +669,7 @@ function fill_search_data_table(self)
         disabled = disabled.."macros "
     end
 
-    -- add spells
+    --[=====[ SPELLS --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.SPELL] then
         local i = 1
         while true do
@@ -696,7 +695,7 @@ function fill_search_data_table(self)
         disabled = disabled.."spells "
     end
 
-    -- manually adding some slashcommmands
+    --[=====[ CMDs --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.CMD] then
         db_search['Reload UI'] = {slash_cmd='/reload', tooltipText=L["DB_SEARCH_RELOAD_UI"], type=SearchIndexType.CMD}
         db_search['Logout'] = {slash_cmd='/logout', tooltipText=L["DB_SEARCH_LOGOUT"], type=SearchIndexType.CMD}
@@ -709,7 +708,7 @@ function fill_search_data_table(self)
         disabled = disabled.."slash commands "
     end
 
-    -- items
+    --[=====[ ITEMS --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.ITEM] then
         for bag=0, NUM_BAG_SLOTS do
             for bagSlots=1, GetContainerNumSlots(bag) do
@@ -732,13 +731,13 @@ function fill_search_data_table(self)
         disabled = disabled.."items "
     end
 
-    -- add mounts
+    --[=====[ MOUNTS --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.MOUNT] then
         for i=1, C_MountJournal.GetNumDisplayedMounts() do
             creatureName, spellID, icon = C_MountJournal.GetDisplayedMountInfo(i)
             spellString, spellname = item_link_to_string(GetSpellLink(spellID))
             db_search[creatureName] = {
-                slash_cmd="/cast "..creatureName, 
+                slash_cmd="/cast "..spellname, 
                 icon = icon,
                 tooltipItemString=spellString,
                 type = SearchIndexType.MOUNT
@@ -749,7 +748,7 @@ function fill_search_data_table(self)
         disabled = disabled.."mounts "
     end
     
-    -- add equip sets
+    --[=====[ EQUIPMENT SETS --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.EQUIP_SET] then
         for i=0, C_EquipmentSet.GetNumEquipmentSets() do
             local name, iconFileID, setID, isEquipped = C_EquipmentSet.GetEquipmentSetInfo(i)
@@ -767,7 +766,7 @@ function fill_search_data_table(self)
         disabled = disabled.."equip_sets "
     end
     
-    -- add blizz frames
+    --[=====[ BLIZZARD FRAMES --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.BLIZZ_FRAME] then
         -- global strings from https://www.townlong-yak.com/framexml/live/GlobalStrings.lua/DE
         -- available functions: https://github.com/tomrus88/BlizzardInterfaceCode/blob/6922484b7b57ed6b3133ea54cdc828db94c7813d/Interface/FrameXML/UIParent.lua 
