@@ -5,6 +5,7 @@ Execute commands fast, no need to clutter up your desktio with a lot if names, j
 * **Fast and small footprint**
 * **Frequency based search results**
 * **Configuration UI**
+* **Hide/ show elements in the search screen**
 
 ## Quickstart
 
@@ -12,18 +13,21 @@ Execute commands fast, no need to clutter up your desktio with a lot if names, j
 2. Type something
 3. press Enter (the first entry will be executed) or use the up/ down keys
 
-To change the keybinding go into the configuration window (`ctrl+alt` --> `kl` --> select `kl show` --> `Enter`)
+To change the keybinding go into the configuration menu: `ctrl+alt` --> type in `kl` --> select `kl show` --> `Enter`
+
+Also check out the other options, eg in the Look & Feel :)
 
 ## Tipps
 
 * Use up/ down keys to navigate or select an entry by clicking on it
-* Search database is refreshed once at login time. Can also manually be refreshed using the configuration ui.
+* Search database is refreshed once at login time. Can also manually be refreshed using the button in the configuration ui.
 
 ## Gotchas& Known Issues
 
 * Does not work in combat, due to Blizzard API limiations
 * Needs one free slot in the "General" macro tab
 * Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with a diffent slash commands. Am not sure how to salve that atm.
+* The way the autoscrolling works right now is very basic, it does not handle resizing or manual scrolling.
 
 ## How does the serach frequency und filtering work
 
@@ -40,12 +44,14 @@ To change the keybinding go into the configuration window (`ctrl+alt` --> `kl` -
 * (*) All inventory items which are usable
 * (*) All mounts
 * (*) Equipment Sets
+* (*) Blizzard Unit Frames
 
 (*) enabled by default, for the rest go into the configuration window.
 
 ## Roadmap
 
 * Add ability to execute subcommands, based on currently selected item
-* add shortcuts blizzard frames
+* Add shortcuts blizzard frames
+* Possibilty to modify the search index per GUI
 
 Let me know if you find any bugs :)

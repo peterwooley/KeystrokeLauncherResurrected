@@ -45,10 +45,13 @@ L['CONFIG_INDEX_TYPES_EQUIP_SET'] = 'Equipment Sets'
 L['CONFIG_INDEX_TYPES_BLIZZ_FRAME'] = 'Blizzard Frames'
 
 -- look n feel
-L['CONFIG_LOOK_N_FEEL_TOOLTIP_NAME'] = 'Show Tooltip'
+L['CONFIG_LOOK_N_FEEL_HEADER'] = 'Show / hide elements'
+L['CONFIG_LOOK_N_FEEL_TOOLTIP_NAME'] = 'Tooltips'
 L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'] = 'Enables / disables the tooltips'
-L['CONFIG_LOOK_N_FEEL_MARKER_NAME'] = "Show Type Marker"
-L['CONFIG_LOOK_N_FEEL_MARKER_DESC'] = "These are the color dots."
+L['CONFIG_LOOK_N_FEEL_MARKER_NAME'] = "Type Marker"
+L['CONFIG_LOOK_N_FEEL_MARKER_DESC'] = "Show/ hide the search type marker (the color dots)."
+L['CONFIG_LOOK_N_FEEL_CHECKBOXES_NAME'] = "Type Checkboxes"
+L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'] = "Show/ hide the search type filter checkboxes."
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Content of search freq table:"

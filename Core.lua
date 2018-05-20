@@ -8,15 +8,17 @@ local SearchIndexType = Enumm {
     ADDON = { icon = 'blau'},
     MACRO = { icon = 'dunkel_grün'},
     SPELL = { icon = 'dunkel_lila'},
-    CMD = { icon = 'gelb'},
+    CMD = { icon = 'rosa'},
     ITEM = { icon = 'hell_grün'},
     MOUNT = { icon = 'khaki'},
     EQUIP_SET = { icon = 'türkis'},
     BLIZZ_FRAME = { icon = 'schokolade'}
 }
-
+KL_MAIN_FRAME_WIDTH = 640
+KL_MAIN_FRAME_HEIGHT = 400
 local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
 
+-- let's go
 function KeystrokeLauncher:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherDB")
     if self.db.char.keybindingModifiers == nil then
@@ -34,10 +36,16 @@ function KeystrokeLauncher:OnInitialize()
             [SearchIndexType.CMD] = true
         }
     end
+    if self.db.char.searchTypeCheckboxes == nil then
+        self.db.char.searchTypeCheckboxes = {}
+        toggle_all_search_type_checkboxes(self)
+    end
     if self.db.char.kl == nil then
         self.db.char.kl = {}
         self.db.char.kl['debug'] = false
         self.db.char.kl['show_tooltips'] = true
+        self.db.char.kl['show_type_marker'] = true
+        self.db.char.kl['show_type_checkboxes'] = true
     end
     if not SEARCH_TABLE_INIT_DONE then
         C_Timer.After(2, function()
@@ -74,6 +82,10 @@ function KeystrokeLauncher:OnInitialize()
                 name = "Look & Feel",
                 type = "group",
                 args = {
+                    header = {
+                        name = L['CONFIG_LOOK_N_FEEL_HEADER'],
+                        type = "header"
+                    },
                     show_tooltip = {
                         name = L['CONFIG_LOOK_N_FEEL_TOOLTIP_NAME'],
                         desc = L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'],
@@ -87,6 +99,19 @@ function KeystrokeLauncher:OnInitialize()
                         type = "toggle",
                         set = function(info, val) self.db.char.kl['show_type_marker'] = val end,
                         get = function(info) return self.db.char.kl['show_type_marker'] end
+                    },
+                    show_type_checkboxes = {
+                        name = L['CONFIG_LOOK_N_FEEL_CHECKBOXES_NAME'],
+                        desc = L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'],
+                        type = "toggle",
+                        set = function(info, val) 
+                            self.db.char.kl['show_type_checkboxes'] = val
+                            -- when the gui element is hidden, all group filters are set to true 
+                            if not val then
+                                toggle_all_search_type_checkboxes(self)
+                            end
+                        end,
+                        get = function(info) return self.db.char.kl['show_type_checkboxes'] end
                     },
                 }
             },
@@ -302,8 +327,8 @@ function show_main_frame(self)
         AceGUI:Release(widget) 
     end)
     KL_MAIN_FRAME:SetLayout("Flow")
-    KL_MAIN_FRAME:SetWidth(400)
-    KL_MAIN_FRAME:SetHeight(300)
+    KL_MAIN_FRAME:SetWidth(KL_MAIN_FRAME_WIDTH)
+    KL_MAIN_FRAME:SetHeight(KL_MAIN_FRAME_HEIGHT)
     KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(false)
     KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
         SEARCH_EDITBOX:SetFocus()
@@ -327,6 +352,41 @@ function show_main_frame(self)
     SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value) show_results(self, value) end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
 
+    --[=====[ SEARCH TYPES --]=====]
+    if self.db.char.kl['show_type_checkboxes'] then
+        local search_type_group = AceGUI:Create("SimpleGroup")
+        search_type_group:SetFullWidth(true)
+        search_type_group:SetLayout("flow")
+        SEARCH_TYPE_CHECKBOXES = {}
+        for k,v in pairs(SearchIndexType) do
+            for k1,v1 in pairs(v) do
+                -- only render checkbox if search type is enaböed for indexing
+                if self.db.char.searchDataWhatIndex[k1] then
+                    local search_type_checkbox = AceGUI:Create("CheckBox")
+                    search_type_checkbox:SetImage(get_icon_for_index_type(k1))
+                    search_type_checkbox:SetLabel(L['CONFIG_INDEX_TYPES_'..k1])
+                    search_type_checkbox:SetWidth(150)
+                    search_type_checkbox:SetCallback("OnValueChanged", function(widget, arg, value)
+                        self.db.char.searchTypeCheckboxes[k1] = value
+                        show_results(self, SEARCH_EDITBOX:GetText())
+                    end)
+                    if self.db.char.searchTypeCheckboxes[k1] == true then
+                        search_type_checkbox:ToggleChecked()
+                    end
+                    SEARCH_TYPE_CHECKBOXES[k1] = search_type_checkbox
+                    search_type_group:AddChild(search_type_checkbox)
+                end
+            end
+        end
+    
+        KL_MAIN_FRAME:AddChild(search_type_group)
+    end
+
+    --[=====[ SEPERATOR --]=====]
+    local heading = AceGUI:Create("Heading")
+    heading:SetFullWidth(true)
+    KL_MAIN_FRAME:AddChild(heading)
+
     --[=====[ SCROLLCONTAINER --]=====]
     SCROLLCONTAINER = AceGUI:Create("SimpleGroup")
     SCROLLCONTAINER:SetFullWidth(true)
@@ -342,6 +402,79 @@ function show_main_frame(self)
 
     KL_MAIN_FRAME:Show()
 end 
+
+function show_results(self, filter)
+    if filter == nil then
+        filter = '' -- :find cant handle nil
+    end
+    SEARCH_TABLE_TO_LABEL = {}
+    SCROLL:ReleaseChildren() -- clear all and start from fresh
+
+    -- sort data by combinng two tables
+    local search_data_table_sorted = sort_search_data_table(self, filter)
+
+    local counter = 0
+    for k,v in ipairs(search_data_table_sorted) do
+        local key = v[1]
+        key_data = self.db.char.searchDataTable[key]
+
+        -- fist filter: must be in enabled group
+        local correct_type = false
+        for k1,v1 in pairs(self.db.char.searchTypeCheckboxes) do
+            if key_data.type == k1 then
+                if v1 then
+                    correct_type = true
+                end
+            end
+        end
+
+        -- second filter: must match filter string
+        if correct_type and key:lower():find(filter) then
+            local frame = AceGUI:Create("SimpleGroup")
+            frame:SetLayout("flow")
+            frame:SetFullWidth(true)
+
+            --[=====[ IMTERACTIVE LABEL --]=====]
+            local label = AceGUI:Create("InteractiveLabel")
+            if self.db.char.kl['debug'] then
+                label:SetText(key.." ("..get_freq(self, key, filter)..") (idx: "..k..")")
+            else
+                label:SetText(key)
+            end
+            if key_data.icon then
+                label:SetImage(key_data.icon)
+            else
+                label:SetImage(ICON_BASE_PATH..'transparent.blp')
+            end
+            label:SetWidth(KL_MAIN_FRAME_WIDTH-70)
+            label:SetHeight(15)
+            label:SetFont(GameFontNormal:GetFont(), 13)
+            label:SetCallback("OnClick", function() 
+                -- cant propagate mouse clicks, so need to press enter after selecting
+                select_label(self, key)
+            end)
+            frame:AddChild(label)
+            
+            --[=====[ TYPE ICON --]=====]
+            if self.db.char.kl['show_type_marker'] then
+                local icon = AceGUI:Create("Icon")
+                icon:SetImage(get_icon_for_index_type(key_data.type))
+                icon:SetImageSize(10, 10)
+                icon:SetWidth(10)
+                icon:SetHeight(10)
+                frame:AddChild(icon)
+            end
+
+            SCROLL:AddChild(frame)
+            table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})
+            -- the first entry is always the one we want to execute per default
+            if counter == 0 then
+                select_label(self, key)
+            end
+            counter = counter + 1
+        end
+    end
+end
 
 -- execute_macro means effectively propagate then close the main window
 function execute_macro(self)
@@ -425,66 +558,6 @@ function sort_search_data_table(self, filter)
     return search_data_table_sorted
 end
 
-function show_results(self, filter)
-    if filter == nil then
-        filter = '' -- :find cant handle nil
-    end
-    SEARCH_TABLE_TO_LABEL = {}
-    SCROLL:ReleaseChildren() -- clear all and start from fresh
-
-    -- sort data by combinng two tables
-    local search_data_table_sorted = sort_search_data_table(self, filter)
-
-    local counter = 0
-    for k,v in ipairs(search_data_table_sorted) do
-        local key = v[1]
-        if key:lower():find(filter) then
-            local frame = AceGUI:Create("SimpleGroup")
-            frame:SetLayout("flow")
-            frame:SetWidth(390)
-
-            --[=====[ IMTERACTIVE LABEL --]=====]
-            key_data = self.db.char.searchDataTable[key]
-            local label = AceGUI:Create("InteractiveLabel")
-            if self.db.char.kl['debug'] then
-                label:SetText(key.." ("..get_freq(self, key, filter)..") (idx: "..k..")")
-            else
-                label:SetText(key)
-            end
-            if key_data.icon then
-                label:SetImage(key_data.icon)
-            else
-                label:SetImage(ICON_BASE_PATH..'transparent.blp')
-            end
-            label:SetWidth(330)
-            label:SetHeight(15)
-            label:SetFont(GameFontNormal:GetFont(), 13)
-            label:SetCallback("OnClick", function() 
-                -- cant propagate mouse clicks, so need to press enter after selecting
-                select_label(self, key)
-            end)
-            frame:AddChild(label)
-            
-            --[=====[ TYPE ICON --]=====]
-            if self.db.char.kl['show_type_marker'] then
-                local icon = AceGUI:Create("Icon")
-                icon:SetImage(get_icon_for_index_type(key_data.type))
-                icon:SetImageSize(10, 10)
-                icon:SetWidth(10)
-                icon:SetHeight(10)
-                frame:AddChild(icon)
-            end
-
-            SCROLL:AddChild(frame)
-            table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})
-            -- the first entry is always the one we want to execute per default
-            if counter == 0 then
-                select_label(self, key)
-            end
-            counter = counter + 1
-        end
-    end
-end
 
 function get_icon_for_index_type(index_type)
     for k,v in pairs(SearchIndexType) do
@@ -492,6 +565,14 @@ function get_icon_for_index_type(index_type)
             if k1 == index_type then
                 return ICON_BASE_PATH..v1.icon..".blp"
             end
+        end
+    end
+end
+
+function toggle_all_search_type_checkboxes(self)
+    for k,v in pairs(SearchIndexType) do
+        for k1,v1 in pairs(v) do
+            self.db.char.searchTypeCheckboxes[k1] = true
         end
     end
 end
@@ -703,6 +784,7 @@ function fill_search_data_table(self)
         db_search['/kl search_freq print'] = {slash_cmd='/kl search_freq print', tooltipText=L["DB_SEARCH_KL_FREQ_PRINT"], type=SearchIndexType.CMD}
         db_search['/kl search_table rebuild'] = {slash_cmd='/kl search_table rebuild', tooltipText=L["DB_SEARCH_KL_SEARCH_REBUILD"], type=SearchIndexType.CMD}
         db_search['Dismount'] = {slash_cmd='/dismount', tooltipText=L["DB_SEARCH_DISMOUNT"], type=SearchIndexType.CMD}
+        db_search[MOUNT_JOURNAL_SUMMON_RANDOM_FAVORITE_MOUNT] = {slash_cmd='/run C_MountJournal.SummonByID(0)', tooltipText=MOUNT_JOURNAL_SUMMON_RANDOM_FAVORITE_MOUNT, type=SearchIndexType.CMD}
         enabled = enabled.."slash commands "
     else
         disabled = disabled.."slash commands "
