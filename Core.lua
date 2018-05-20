@@ -75,11 +75,18 @@ function KeystrokeLauncher:OnInitialize()
                 type = "group",
                 args = {
                     show_tooltip = {
-                        name = "Show Tooltip",
-                        desc = "Enables / disables the tooltips",
+                        name = L['CONFIG_LOOK_N_FEEL_TOOLTIP_NAME'],
+                        desc = L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'],
                         type = "toggle",
                         set = function(info, val) self.db.char.kl['show_tooltips'] = val end,
                         get = function(info) return self.db.char.kl['show_tooltips'] end
+                    },
+                    show_type_marker = {
+                        name = L['CONFIG_LOOK_N_FEEL_MARKER_NAME'],
+                        desc = L['CONFIG_LOOK_N_FEEL_MARKER_DESC'],
+                        type = "toggle",
+                        set = function(info, val) self.db.char.kl['show_type_marker'] = val end,
+                        get = function(info) return self.db.char.kl['show_type_marker'] end
                     },
                 }
             },
@@ -460,12 +467,14 @@ function show_results(self, filter)
             frame:AddChild(label)
             
             -- index type icon
-            local icon = AceGUI:Create("Icon")
-            icon:SetImage(get_icon_for_index_type(key_data.type))
-            icon:SetImageSize(10, 10)
-            icon:SetWidth(10)
-            icon:SetHeight(10)
-            frame:AddChild(icon)
+            if self.db.char.kl['show_type_marker'] then
+                local icon = AceGUI:Create("Icon")
+                icon:SetImage(get_icon_for_index_type(key_data.type))
+                icon:SetImageSize(10, 10)
+                icon:SetWidth(10)
+                icon:SetHeight(10)
+                frame:AddChild(icon)
+            end
 
             SCROLL:AddChild(frame)
             table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})

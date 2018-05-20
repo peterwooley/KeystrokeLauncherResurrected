@@ -44,6 +44,12 @@ L['CONFIG_INDEX_TYPES_MOUNT'] = 'Mounts'
 L['CONFIG_INDEX_TYPES_EQUIP_SET'] = 'Equipment Sets'
 L['CONFIG_INDEX_TYPES_BLIZZ_FRAME'] = 'Blizzard Frames'
 
+-- look n feel
+L['CONFIG_LOOK_N_FEEL_TOOLTIP_NAME'] = 'Show Tooltip'
+L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'] = 'Enables / disables the tooltips'
+L['CONFIG_LOOK_N_FEEL_MARKER_NAME'] = "Show Type Marker"
+L['CONFIG_LOOK_N_FEEL_MARKER_DESC'] = "These are the color dots."
+
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Content of search freq table:"
 L["PRINT_SEARCH_DATA_FREQ"] = "Content of search data table:"
