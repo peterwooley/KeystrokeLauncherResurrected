@@ -1,6 +1,6 @@
 # Keystroke Launcher (BETA)
 
-Execute commands fast, no need to clutter up your desktio with a lot if names, just remember the name and execute it directly!
+Execute commands fast, no need to clutter your desktop with a lot of icons, just remember the name and execute it directly!
 
 * **Fast and small footprint**
 * **Frequency based search results**
