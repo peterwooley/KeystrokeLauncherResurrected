@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.1
+
+* Size of the main frame depends now on the number of visible search type checkboxes
+* Typos in English and German translation
+
 ## v0.9
 
 * NEW: enabled Tooltips again

@@ -14,8 +14,6 @@ local SearchIndexType = Enumm {
     EQUIP_SET = { icon = 'türkis'},
     BLIZZ_FRAME = { icon = 'schokolade'}
 }
-KL_MAIN_FRAME_WIDTH = 640
-KL_MAIN_FRAME_HEIGHT = 400
 local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
 
 -- let's go
@@ -54,6 +52,8 @@ function KeystrokeLauncher:OnInitialize()
             SEARCH_TABLE_INIT_DONE = true
         end)
     end
+    -- depending on if the type checkboxes are shonw, the intial window size is smaller/ bigger
+    set_main_frame_size(self)
 
     --[=====[ SLASH COMMANDS/ CONFIG OPTIONS --]=====]
     local options = {
@@ -90,6 +90,7 @@ function KeystrokeLauncher:OnInitialize()
                         name = L['CONFIG_LOOK_N_FEEL_TOOLTIP_NAME'],
                         desc = L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'],
                         type = "toggle",
+                        descStyle = "inline",
                         set = function(info, val) self.db.char.kl['show_tooltips'] = val end,
                         get = function(info) return self.db.char.kl['show_tooltips'] end
                     },
@@ -97,6 +98,7 @@ function KeystrokeLauncher:OnInitialize()
                         name = L['CONFIG_LOOK_N_FEEL_MARKER_NAME'],
                         desc = L['CONFIG_LOOK_N_FEEL_MARKER_DESC'],
                         type = "toggle",
+                        descStyle = "inline",
                         set = function(info, val) self.db.char.kl['show_type_marker'] = val end,
                         get = function(info) return self.db.char.kl['show_type_marker'] end
                     },
@@ -104,15 +106,17 @@ function KeystrokeLauncher:OnInitialize()
                         name = L['CONFIG_LOOK_N_FEEL_CHECKBOXES_NAME'],
                         desc = L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'],
                         type = "toggle",
+                        descStyle = "inline",
                         set = function(info, val) 
                             self.db.char.kl['show_type_checkboxes'] = val
                             -- when the gui element is hidden, all group filters are set to true 
                             if not val then
                                 toggle_all_search_type_checkboxes(self)
                             end
+                            set_main_frame_size(self)
                         end,
                         get = function(info) return self.db.char.kl['show_type_checkboxes'] end
-                    },
+                    }
                 }
             },
             keybindings = {
@@ -188,8 +192,14 @@ function KeystrokeLauncher:OnInitialize()
                             end
                             return rv
                         end,
-                        set = function(info, key, state) self.db.char.searchDataWhatIndex[key] = state end,
-                        get = function(info, key) return self.db.char.searchDataWhatIndex[key] end,
+                        set = function(info, key, state) 
+                            self.db.char.searchDataWhatIndex[key] = state 
+                            set_main_frame_size(self)
+                        end,
+                        get = function(info, key) 
+                            set_main_frame_size(self)
+                            return self.db.char.searchDataWhatIndex[key] 
+                        end,
                     }
                 }
             },
@@ -383,9 +393,11 @@ function show_main_frame(self)
     end
 
     --[=====[ SEPERATOR --]=====]
-    local heading = AceGUI:Create("Heading")
-    heading:SetFullWidth(true)
-    KL_MAIN_FRAME:AddChild(heading)
+    if self.db.char.kl['show_type_checkboxes'] then
+        local heading = AceGUI:Create("Heading")
+        heading:SetFullWidth(true)
+        KL_MAIN_FRAME:AddChild(heading)
+    end
 
     --[=====[ SCROLLCONTAINER --]=====]
     SCROLLCONTAINER = AceGUI:Create("SimpleGroup")
@@ -578,7 +590,11 @@ function toggle_all_search_type_checkboxes(self)
 end
 
 function move_selector(self, keyboard_key)
-    local will_fit = SCROLLCONTAINER.frame:GetHeight() / 22
+    local el_height = 22 -- height of one row
+    local will_fit = SCROLLCONTAINER.frame:GetHeight() / el_height
+    -- if 22 is the interactive label height, why do I need to add some random value to
+    -- the scroll_multi??
+    local scroll_multi = el_height+12.5
     
     -- set initial boundaries
     if curr_min == nil then
@@ -593,14 +609,14 @@ function move_selector(self, keyboard_key)
         if CURRENTLY_SELECTED_LABEL_INDEX > 2 and CURRENTLY_SELECTED_LABEL_INDEX < curr_min + 3 then
             curr_min = curr_min - 1
             curr_max = curr_max - 1
-            SCROLL:SetScroll(curr_min*9)
+            SCROLL:SetScroll(curr_min*scroll_multi)
         end
         select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
     elseif keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
         if CURRENTLY_SELECTED_LABEL_INDEX > curr_max - 2 then
             curr_min = curr_min + 1
             curr_max = curr_max + 1
-            SCROLL:SetScroll(curr_min*9)
+            SCROLL:SetScroll(curr_min*scroll_multi)
         end
         select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
     end
@@ -625,6 +641,34 @@ function select_label(self, key, index)
         else
             v.label:SetColor(255, 255, 255, 1)
         end
+    end
+end
+
+function set_main_frame_size(self)
+    -- count how many search type checkboxes are enabled/displayed
+    local len = 0
+    for k,v in pairs(SearchIndexType) do
+        for k1,v1 in pairs(v) do
+            if self.db.char.searchDataWhatIndex[k1] then
+                len = len + 1
+            end
+        end
+    end
+    local rows = 2
+    len = math.floor((len/rows)+0.5) -- round up
+    local one_item_width = 170
+    -- min columns
+    if len < 2 then
+        len = 2
+    end
+
+    if self.db.char.kl['show_type_checkboxes'] then
+        KL_MAIN_FRAME_HEIGHT = 400
+        -- different widht depending on 
+        KL_MAIN_FRAME_WIDTH = one_item_width * len
+    else
+        KL_MAIN_FRAME_WIDTH = 380
+        KL_MAIN_FRAME_HEIGHT = 350
     end
 end
 
@@ -888,7 +932,7 @@ function fill_search_data_table(self)
             type = SearchIndexType.BLIZZ_FRAME
         }
         db_search[ADVENTURE_JOURNAL] = {
-            slash_cmd = '/run ToggleEncounterJournal()', 
+            slash_cmd = '/run ToggleEncounterJournal(1)', 
             tooltipText = L['OPEN']..' '..ADVENTURE_JOURNAL  , 
             type = SearchIndexType.BLIZZ_FRAME
         }
@@ -907,9 +951,15 @@ function fill_search_data_table(self)
             tooltipText = L['OPEN']..' '..ACHIEVEMENT_BUTTON, 
             type = SearchIndexType.BLIZZ_FRAME
         }
+        -- one tab
         db_search[MOUNTS] = {
             slash_cmd = '/run ToggleCollectionsJournal(1)', 
             tooltipText = L['OPEN']..' '..MOUNTS, 
+            type = SearchIndexType.BLIZZ_FRAME
+        }
+        db_search[HEIRLOOMS] = {
+            slash_cmd = '/run ToggleCollectionsJournal(4)', 
+            tooltipText = L['OPEN']..' '..HEIRLOOMS, 
             type = SearchIndexType.BLIZZ_FRAME
         }
 

@@ -19,18 +19,18 @@ L["config_modifiers_alt"] = "Alt"
 L["config_modifiers_ctrl"] = "Ctrl"
 L["config_modifiers_shift"] = "Shift"
 L["config_reset_name"] = "Alles zurücksetzen"
-L["config_reset_desc"] = "Mach einen factory reset"
+L["config_reset_desc"] = "Mache einen factory reset"
 L["config_reset_confirmText"] = "Alle Keystroke Launcher Datenbanken werden auf die Standardwerte zurückgesetzt  - weitermachen?"
 
 L["config_search_table_name"] = "Suchindex"
 L["config_search_table_header_one"] = "Der Suchindex."
 L["config_search_table_rebuild"] = "Aktualisieren"
-L["config_search_table_header_two"] = "Einstellungen zu den Index Modulen"
-L["config_search_table_desc"] = "Vergiss nicht auf 'Aktualisieren' zu drücken, nachdem du Modul aktiviert/ deaktiviert hast.\n\nAnmerkung: wenn du das 'Addons' Modul aktivierst, gibt es kleine lags beim erzeugen der Suchdatenbank (standardmäßig einmal beim Login)."
+L["config_search_table_header_two"] = "Einstellungen zu den Suchindex Modulen"
+L["config_search_table_desc"] = "Vergiss nicht auf 'Aktualisieren' zu drücken, nachdem du ein Modul aktiviert / deaktiviert hast.\n\nAnmerkung: wenn du das 'Addons' Modul aktivierst, gibt es, wenn du viele Addons hast, kleine lags beim Erzeugen der Suchdatenbank (standardmäßig einmal beim Login)."
 L["config_search_table_index"] = "Auswählen zum aktivieren"
 
 L["config_search_freq_table_name"] = "Häufigkeitsindex"
-L["config_search_freq_table_desc"] = "Die Häufigkeitsindex merkt sich wie oft du was ausgeführt hast."
+L["config_search_freq_table_desc"] = "Der Häufigkeitsindex merkt sich wie oft du was ausgeführt hast."
 L["config_search_freq_table_clear_name"] = "Clear"
 L["config_search_freq_table_clear_desc"] = "Setze den Häufigkeitsindex zurück"
 L["config_search_freq_table_cleared"] = "Häufigkeitsindex zurückgesetzt"
@@ -41,7 +41,7 @@ L['CONFIG_INDEX_TYPES_SPELL'] = 'Zaubersprüche'
 L['CONFIG_INDEX_TYPES_CMD'] = 'Slash Befehle'
 L['CONFIG_INDEX_TYPES_ITEM'] = 'Gegenstände'
 L['CONFIG_INDEX_TYPES_MOUNT'] = 'Reittiere'
-L['CONFIG_INDEX_TYPES_EQUIP_SET'] = 'Asurüstungs-Sets'
+L['CONFIG_INDEX_TYPES_EQUIP_SET'] = 'Ausrüstungs-Sets'
 L['CONFIG_INDEX_TYPES_BLIZZ_FRAME'] = 'Blizzard Fenster'
 
 -- look n feel
@@ -49,9 +49,9 @@ L['CONFIG_LOOK_N_FEEL_HEADER'] = 'Anzeigen / verstecken von Elementen'
 L['CONFIG_LOOK_N_FEEL_TOOLTIP_NAME'] = 'Tooltips'
 L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'] = 'Zeigt / versteckt die Tooltips'
 L['CONFIG_LOOK_N_FEEL_MARKER_NAME'] = "Typ Markierungen"
-L['CONFIG_LOOK_N_FEEL_MARKER_DESC'] = "Zeig / versteckt die Typ Markierungen an (die farbigen Punkte)."
+L['CONFIG_LOOK_N_FEEL_MARKER_DESC'] = "Zeigt / versteckt die Typ Markierungen (die farbigen Punkte)."
 L['CONFIG_LOOK_N_FEEL_CHECKBOXES_NAME'] = "Typ Checkboxen"
-L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'] = "Anzeigen / verstekcne der Suchtyp Checkboxen."
+L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'] = "Zeigt / versteckt die Suchtyp Checkboxen."
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Inhalt der Suchdatenbank:"
@@ -62,9 +62,9 @@ L["INDEX_ENABLED"] = "  Aktiviert: "
 
 --[=====[ TOOLTIPS --]=====]
 L["DB_SEARCH_RELOAD_UI"] = "Lade die UI neu"
-L["DB_SEARCH_LOGOUT"] = "LoAusloggengout"
-L["DB_SEARCH_KL_SHOW"] = "Zeige die Keystrooke Launcher UI an"
-L["DB_SEARCH_KL_FREQ_PRINT"] = "Zeige denHäufigkeitsindex an"
+L["DB_SEARCH_LOGOUT"] = "Ausloggen"
+L["DB_SEARCH_KL_SHOW"] = "Zeige die Keystroke Launcher UI an"
+L["DB_SEARCH_KL_FREQ_PRINT"] = "Zeige den Häufigkeitsindex an"
 L["DB_SEARCH_DISMOUNT"] = "Absteigen"
 L["DB_SEARCH_KL_SEARCH_REBUILD"] = "Aktualisiere den Suchindex"
 
