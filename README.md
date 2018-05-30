@@ -1,4 +1,4 @@
-# Keystroke Launcher (BETA)
+# Keystroke Launcher (BETA) [KL]
 
 Execute commands fast, no need to clutter your desktop with a lot of icons, just remember the name and execute it directly!
 
@@ -17,23 +17,23 @@ To change the keybinding go into the configuration menu: `ctrl+alt` --> type in 
 
 Also check out the other options, eg in the Look & Feel :)
 
-## Tipps
+**Tipps:**
 
 * Use up/ down keys to navigate or select an entry by clicking on it
 * Search database is refreshed once at login time. Can also manually be refreshed using the button in the configuration ui.
 
-## Gotchas& Known Issues
+## Associate a keyword to an item
 
-* Does not work in combat, due to Blizzard API limiations
-* Needs one free slot in the "General" macro tab
-* Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with a diffent slash commands. Am not sure how to salve that atm.
-* The way the autoscrolling works right now is very basic, it does not handle resizing or manual scrolling.
+KL implicitly associates a keyword with a particular item.
 
-## How does the serach frequency und filtering work
+1. Open the tooel and enter a string, eg `r`
+2. Use up/ down keys to navigate to an item, eg `reload ui`
+3. Hit Enter to execute it once
 
-* Everytime a command is executed the search frequency is increased by one and saved together with the currently used filter string
-* If you enter the same filter string again, the last command executed with it, will be on top
-* Below is the rest of the list, ordered by total number of executions
+Now, if you open the window again and enter `r`, `relead ui` will be the first result. The other results below the first entry, are ordered by *total number of executions*.
+
+* Association is done at execution time, that is, when you actually launch the item.
+* You may want to associate `r` with an other item later. In that case, just type `r` and select this other item before executing it. The keystroke laucnher will change the association implicitly.
 
 ## The search index can contain
 
@@ -47,6 +47,13 @@ Also check out the other options, eg in the Look & Feel :)
 * (*) Blizzard Unit Frames
 
 (*) enabled by default, for the rest go into the configuration window.
+
+## Gotchas& Known Issues
+
+* Does not work in combat, due to Blizzard API limiations
+* Needs one free slot in the "General" macro tab
+* Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with a diffent slash commands. Am not sure how to salve that atm.
+* The way the autoscrolling works right now is very basic, it does not handle resizing or manual scrolling.
 
 ## Roadmap
 
