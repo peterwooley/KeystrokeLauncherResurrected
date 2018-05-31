@@ -34,6 +34,7 @@ function KeystrokeLauncher:OnInitialize()
             [SearchIndexType.CMD] = true
         }
     end
+    -- searchTypeCheckboxes saves the state of the search type boxes between sessions or program runs
     if self.db.char.searchTypeCheckboxes == nil then
         self.db.char.searchTypeCheckboxes = {}
         toggle_all_search_type_checkboxes(self)
@@ -44,6 +45,7 @@ function KeystrokeLauncher:OnInitialize()
         self.db.char.kl['show_tooltips'] = true
         self.db.char.kl['show_type_marker'] = true
         self.db.char.kl['show_type_checkboxes'] = true
+        self.db.char.kl['enable_quick_filter'] = false
     end
     if not SEARCH_TABLE_INIT_DONE then
         C_Timer.After(2, function()
@@ -83,10 +85,12 @@ function KeystrokeLauncher:OnInitialize()
                 type = "group",
                 args = {
                     header = {
+                        order = 1,
                         name = L['CONFIG_LOOK_N_FEEL_HEADER'],
                         type = "header"
                     },
                     show_tooltip = {
+                        order = 2,
                         name = L['CONFIG_LOOK_N_FEEL_TOOLTIP_NAME'],
                         desc = L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'],
                         type = "toggle",
@@ -95,6 +99,7 @@ function KeystrokeLauncher:OnInitialize()
                         get = function(info) return self.db.char.kl['show_tooltips'] end
                     },
                     show_type_marker = {
+                        order = 3,
                         name = L['CONFIG_LOOK_N_FEEL_MARKER_NAME'],
                         desc = L['CONFIG_LOOK_N_FEEL_MARKER_DESC'],
                         type = "toggle",
@@ -103,6 +108,7 @@ function KeystrokeLauncher:OnInitialize()
                         get = function(info) return self.db.char.kl['show_type_marker'] end
                     },
                     show_type_checkboxes = {
+                        order = 4,
                         name = L['CONFIG_LOOK_N_FEEL_CHECKBOXES_NAME'],
                         desc = L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'],
                         type = "toggle",
@@ -110,12 +116,31 @@ function KeystrokeLauncher:OnInitialize()
                         set = function(info, val) 
                             self.db.char.kl['show_type_checkboxes'] = val
                             -- when the gui element is hidden, all group filters are set to true 
+                            -- and the quick filters are disabled
                             if not val then
                                 toggle_all_search_type_checkboxes(self)
+                                self.db.char.kl['enable_quick_filter'] = false
                             end
                             set_main_frame_size(self)
                         end,
                         get = function(info) return self.db.char.kl['show_type_checkboxes'] end
+                    },
+                    header_experimental = {
+                        order = 5,
+                        name = L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'],
+                        type = "header"
+                    },
+                    show_type_marker = {
+                        order = 6,
+                        name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'],
+                        type = "toggle",
+                        set = function(info, val) self.db.char.kl['enable_quick_filter'] = val end,
+                        get = function(info) return self.db.char.kl['enable_quick_filter'] end
+                    },
+                    descc = {
+                        order = 7,
+                        name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'],
+                        type = "description"
                     }
                 }
             },
@@ -362,19 +387,25 @@ function show_main_frame(self)
     SEARCH_EDITBOX:SetCallback("OnTextChanged", function(widget, arg2, value) show_results(self, value) end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
 
-    --[=====[ SEARCH TYPES --]=====]
+    --[=====[ SEARCH TYPES CHECKBOXES --]=====]
     if self.db.char.kl['show_type_checkboxes'] then
         local search_type_group = AceGUI:Create("SimpleGroup")
         search_type_group:SetFullWidth(true)
         search_type_group:SetLayout("flow")
         SEARCH_TYPE_CHECKBOXES = {}
+        local counter = 1
         for k,v in pairs(SearchIndexType) do
             for k1,v1 in pairs(v) do
-                -- only render checkbox if search type is enaböed for indexing
+                -- only render checkbox if search type is enabled for indexing
                 if self.db.char.searchDataWhatIndex[k1] then
                     local search_type_checkbox = AceGUI:Create("CheckBox")
                     search_type_checkbox:SetImage(get_icon_for_index_type(k1))
-                    search_type_checkbox:SetLabel(L['CONFIG_INDEX_TYPES_'..k1])
+                    local label_text = L['CONFIG_INDEX_TYPES_'..k1]
+                    if self.db.char.kl['enable_quick_filter'] then
+                        -- display the id of that index type, used for the quick filter
+                        label_text = '['..counter..'] '..label_text
+                    end
+                    search_type_checkbox:SetLabel(label_text)
                     search_type_checkbox:SetWidth(150)
                     search_type_checkbox:SetCallback("OnValueChanged", function(widget, arg, value)
                         self.db.char.searchTypeCheckboxes[k1] = value
@@ -385,6 +416,7 @@ function show_main_frame(self)
                     end
                     SEARCH_TYPE_CHECKBOXES[k1] = search_type_checkbox
                     search_type_group:AddChild(search_type_checkbox)
+                    counter = counter + 1
                 end
             end
         end
@@ -427,21 +459,41 @@ function show_results(self, filter)
 
     local counter = 0
     for k,v in ipairs(search_data_table_sorted) do
+        local internal_filter = filter -- so that the filter does not change for following loops runs
         local key = v[1]
         key_data = self.db.char.searchDataTable[key]
 
-        -- fist filter: must be in enabled group
+        -- first filter: must be in enabled group
         local correct_type = false
         for k1,v1 in pairs(self.db.char.searchTypeCheckboxes) do
-            if key_data.type == k1 then
-                if v1 then
-                    correct_type = true
+            -- if type enabled and type of current item matches the enabled type checkboxes
+            if v1 and key_data.type == k1 then
+                correct_type = true
+            end
+        end
+        
+        -- first and a half filter: show only if not quick filter was used, if yes, that overrules the first filter
+        if self.db.char.kl['enable_quick_filter'] then
+            for k1,v1 in pairs(self.db.char.searchTypeCheckboxes) do
+                -- SEARCH_TYPE_CHECKBOXES[k1] is nil for currently not displayed type checkboxes
+                if v1 and SEARCH_TYPE_CHECKBOXES[k1] then
+                    local checkbox_text = SEARCH_TYPE_CHECKBOXES[k1].text:GetText()
+                    local number = filter:match('%d')
+                    if checkbox_text and number then
+                        if checkbox_text:match(number) then
+                            if key_data.type ~= k1 then
+                                correct_type = false
+                            end
+                        end
+                    end
                 end
             end
+            -- when we search for items, we do not want the numbers in this case
+            internal_filter = filter:gsub('%d','') 
         end
 
         -- second filter: must match filter string
-        if correct_type and key:lower():find(filter) then
+        if correct_type and key:lower():find(internal_filter) then
             local frame = AceGUI:Create("SimpleGroup")
             frame:SetLayout("flow")
             frame:SetFullWidth(true)
@@ -449,7 +501,7 @@ function show_results(self, filter)
             --[=====[ IMTERACTIVE LABEL --]=====]
             local label = AceGUI:Create("InteractiveLabel")
             if self.db.char.kl['debug'] then
-                label:SetText(key.." ("..get_freq(self, key, filter)..") (idx: "..k..")")
+                label:SetText(key.." ("..get_freq(self, key, internal_filter)..") (idx: "..k..")")
             else
                 label:SetText(key)
             end
@@ -741,8 +793,8 @@ function fill_search_data_table(self)
                     db_search[name] = {
                         slash_cmd=slash_cmd, 
                         tooltipText=name.."\n"..title.."\n"..notes,
-                         type=SearchIndexType.ADDON
-                        }
+                        type=SearchIndexType.ADDON
+                    }
                 else
                     -- no slash command exists, let's see if we can find something in _G['SLASH_...']
                     for k, v in pairs(_G) do

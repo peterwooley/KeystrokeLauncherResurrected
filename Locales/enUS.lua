@@ -52,6 +52,14 @@ L['CONFIG_LOOK_N_FEEL_MARKER_NAME'] = "Type Marker"
 L['CONFIG_LOOK_N_FEEL_MARKER_DESC'] = "Show/ hide the search type marker (the color dots)."
 L['CONFIG_LOOK_N_FEEL_CHECKBOXES_NAME'] = "Type Checkboxes"
 L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'] = "Show/ hide the search type filter checkboxes."
+L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'] = "Experimental"
+L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'] = "Quick Search Type Filter"
+L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'] = [[When enabled, numbers in the search string will be interpreted as search types. The search type category id is the number in in square brackets.
+
+Example: if you type in `r4`, the tool will filter the result list for the search type category with the id `4` and the string `r`. 
+
+Note 1: only works when the Type Checkboses are enabled.
+Note 2: because numbers are then special control characters, you cannot use them for filtering anymore"]]
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Content of search frequency index:"
