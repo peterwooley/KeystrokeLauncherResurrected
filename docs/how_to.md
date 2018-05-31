@@ -1,6 +1,6 @@
 # How To
 
-## <a name="assoc"></a>Associate a keyword to an item
+## Associate a keyword to an item
 
 The tool implicitly associates a keyword with a particular item.
 
@@ -19,7 +19,7 @@ The tool implicitly associates a keyword with a particular item.
 * Association is done at execution time, that is, when you actually launch the item.
 * You may want to associate `r` with an other item later. In that case, just type `r` and select this other item before executing it. The keystroke laucnher will change the association implicitly.
 
-## [Experimental quick search type filter setting]
+## Experimental quick search type filter setting
 
 1. Enable the setting in the Look & Feel and read the notes carefully.
     ![assoc_2](../images/quick_1.jpg)
