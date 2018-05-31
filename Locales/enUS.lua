@@ -22,6 +22,7 @@ L["config_reset_name"] = "Reset all"
 L["config_reset_desc"] = "Do a factory reset"
 L["config_reset_confirmText"] = "This resets every Kestroke Launcher database to default values - proceed?"
 
+-- search table
 L["config_search_table_name"] = "Search Index"
 L["config_search_table_header_one"] = "The main search index"
 L["config_search_table_rebuild"] = "Refresh Index"
@@ -34,6 +35,8 @@ L["config_search_freq_table_desc"] = "The search frequency index stores how ofte
 L["config_search_freq_table_clear_name"] = "Clear"
 L["config_search_freq_table_clear_desc"] = "Empty the search frequency index table"
 L["config_search_freq_table_cleared"] = "Search frequency index cleared"
+L['CONFIG_SEARCH_TABLE_CUSTOM_HEADER'] = "Custom Search Data"
+L['CONFIG_SEARCH_TABLE_CUSTOM_CLEAR'] = "Clear Data"
 
 L['CONFIG_INDEX_TYPES_ADDON'] = 'Addons'
 L['CONFIG_INDEX_TYPES_MACRO'] = 'Macros'
@@ -59,7 +62,9 @@ L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'] = [[When enabled, numbers in the searc
 Example: if you type in `r4`, the tool will filter the result list for the search type category with the id `4` and the string `r`. 
 
 Note 1: only works when the Type Checkboses are enabled.
-Note 2: because numbers are then special control characters, you cannot use them for filtering anymore"]]
+Note 2: because numbers are then special control characters, you cannot use them for filtering anymore]]
+L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'] = 'edit mode'
+L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'edit mode'
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Content of search frequency index:"
