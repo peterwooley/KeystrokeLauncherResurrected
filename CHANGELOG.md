@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.9.5
+
+* NEW: experimental quick search type filter using numbers in the search string. Can be enabled in the look & feel section.
+
 ## v0.9.1
 
 * Size of the main frame depends now on the number of visible search type checkboxes

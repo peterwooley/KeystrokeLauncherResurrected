@@ -1,39 +1,33 @@
-# Keystroke Launcher (BETA) [KL]
+# Keystroke Launcher
+
+![logo](images/avatar.jpg)
 
 Execute commands fast, no need to clutter your desktop with a lot of icons, just remember the name and execute it directly!
 
 * **Fast and small footprint**
 * **Frequency based search results**
 * **Configuration UI**
-* **Hide/ show elements in the search screen**
+* **Configurable look and feel**
+
+Idea based on the awesome keystroke launcher for Windows [Keyperinha](http://keypirinha.com/).
 
 ## Quickstart
 
 1. Press `ctrl+alt` to open the window
 2. Type something
-3. press Enter (the first entry will be executed) or use the up/ down keys
+3. Press *Enter*, the first entry will be executed
 
 To change the keybinding go into the configuration menu: `ctrl+alt` --> type in `kl` --> select `kl show` --> `Enter`
 
-Also check out the other options, eg in the Look & Feel :)
-
 **Tipps:**
 
-* Use up/ down keys to navigate or select an entry by clicking on it
+* Use the *Up/ Down* keys to select a different item. Or use the mouse abd clicking on it.
 * Search database is refreshed once at login time. Can also manually be refreshed using the button in the configuration ui.
 
-## Associate a keyword to an item
+**How To:**
 
-KL implicitly associates a keyword with a particular item.
-
-1. Open the tooel and enter a string, eg `r`
-2. Use up/ down keys to navigate to an item, eg `reload ui`
-3. Hit Enter to execute it once
-
-Now, if you open the window again and enter `r`, `relead ui` will be the first result. The other results below the first entry, are ordered by *total number of executions*.
-
-* Association is done at execution time, that is, when you actually launch the item.
-* You may want to associate `r` with an other item later. In that case, just type `r` and select this other item before executing it. The keystroke laucnher will change the association implicitly.
+* [Associate a keyword to an item](docs/how_to.md#assoc)
+* [Experimental quick search type filter setting](docs/how_to.md#experimental-quick-search-type-filter-setting)
 
 ## The search index can contain
 
@@ -58,7 +52,6 @@ Now, if you open the window again and enter `r`, `relead ui` will be the first r
 ## Roadmap
 
 * Add ability to execute subcommands, based on currently selected item
-* Add shortcuts blizzard frames
 * Possibilty to modify the search index per GUI
 
 Let me know if you find any bugs :)
