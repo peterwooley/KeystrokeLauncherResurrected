@@ -52,7 +52,7 @@ L['CONFIG_LOOK_N_FEEL_MARKER_NAME'] = "Type Marker"
 L['CONFIG_LOOK_N_FEEL_MARKER_DESC'] = "Show/ hide the search type marker (the color dots)."
 L['CONFIG_LOOK_N_FEEL_CHECKBOXES_NAME'] = "Type Checkboxes"
 L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'] = "Show/ hide the search type filter checkboxes."
-L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'] = "Experimental"
+L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'] = "Experimental Settings"
 L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'] = "Quick Search Type Filter"
 L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'] = [[When enabled, numbers in the search string will be interpreted as search types. The search type category id is the number in in square brackets.
 

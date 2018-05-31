@@ -52,6 +52,14 @@ L['CONFIG_LOOK_N_FEEL_MARKER_NAME'] = "Typ Markierungen"
 L['CONFIG_LOOK_N_FEEL_MARKER_DESC'] = "Zeigt / versteckt die Typ Markierungen (die farbigen Punkte)."
 L['CONFIG_LOOK_N_FEEL_CHECKBOXES_NAME'] = "Typ Checkboxen"
 L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'] = "Zeigt / versteckt die Suchtyp Checkboxen."
+L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'] = "Experimentale Einstellungen"
+L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'] = "Schneller Suchtyp Filter"
+L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'] = [[Wenn aktiviert werden Nummern im Suchfeld als Suchtyp interpretiert. Die Suchtyp id ist die Nummer in eckigen Klammern.
+
+Beispiel: wenn du `r4` eintippst, wird in der Suchtyp Kategorie `4` nach dem Buchstaben `r` gefiltert. 
+
+Anmerkung 1: funktioniert nur wenn die Suchtyp Checkboxen auch aktiviert sind.
+Anmerkung 2: weil Zahlen dann als spezielle Kontroll-Charaktere behandelt werden, kannst du sie nicht mehr als filter verwenden."]]
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Inhalt der Suchdatenbank:"

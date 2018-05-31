@@ -134,7 +134,13 @@ function KeystrokeLauncher:OnInitialize()
                         order = 6,
                         name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'],
                         type = "toggle",
-                        set = function(info, val) self.db.char.kl['enable_quick_filter'] = val end,
+                        set = function(info, val) 
+                            self.db.char.kl['enable_quick_filter'] = val 
+                            if val then
+                                self.db.char.kl['show_type_checkboxes'] = true
+                                set_main_frame_size(self)
+                            end
+                        end,
                         get = function(info) return self.db.char.kl['enable_quick_filter'] end
                     },
                     descc = {
