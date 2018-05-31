@@ -26,8 +26,8 @@ To change the keybinding go into the configuration menu: `ctrl+alt` --> type in 
 
 **How To:**
 
-* [Associate a keyword to an item](docs/how_to.md#associate-a-keyword-to-an-item)
-* [Experimental quick search type filter setting](docs/how_to.md#experimental-quick-search-type-filter-setting)
+* [Associate a keyword to an item](docs/assoc.md)
+* [Experimental quick search type filter setting](docs/quick.md)
 
 ## The search index can contain
 
