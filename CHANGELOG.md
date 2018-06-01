@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0
+
+* NEW: edit mode for the search database
+* NEW: custom search database
+* NEW: added the first CVAR (toggle global sound on/off)
+
 ## v0.9.5
 
 * NEW: experimental quick search type filter using numbers in the search string. Can be enabled in the look & feel section.

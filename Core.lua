@@ -12,7 +12,8 @@ local SearchIndexType = Enumm {
     ITEM = { icon = 'hell_grün'},
     MOUNT = { icon = 'khaki'},
     EQUIP_SET = { icon = 'türkis'},
-    BLIZZ_FRAME = { icon = 'schokolade'}
+    BLIZZ_FRAME = { icon = 'schokolade'},
+    CVAR = { icon = 'gelb'}
 }
 local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
 
@@ -36,7 +37,8 @@ function KeystrokeLauncher:OnInitialize()
             [SearchIndexType.ITEM] = true,
             [SearchIndexType.EQUIP_SET] = true,
             [SearchIndexType.BLIZZ_FRAME] = true,
-            [SearchIndexType.CMD] = true
+            [SearchIndexType.CMD] = true,
+            [SearchIndexType.CVAR] = true
         }
     end
     -- searchTypeCheckboxes saves the state of the search type boxes between sessions or program runs
@@ -341,6 +343,19 @@ function KeystrokeLauncher:OnInitialize()
     end)
 end
 
+function merge_keybindings(self)
+    local mergedKeybindings = {}
+    if not is_nil_or_empty(self.db.char.keybindingKey) then
+        mergedKeybindings[self.db.char.keybindingKey] = ''
+    end
+    for k, v in pairs(self.db.char.keybindingModifiers) do
+        if v then
+            mergedKeybindings[k] = ''
+        end
+    end
+    return mergedKeybindings
+end
+
 function check_key_bindings(self, keyboard_key)
     -- collect currently pressed buttons
     local pressedButtons = {}
@@ -352,15 +367,7 @@ function check_key_bindings(self, keyboard_key)
     if IsShiftKeyDown() then pressedButtons["shift"] = '' end
     
     -- format configured keybindings
-    local mergedKeybindings = {}
-    if not is_nil_or_empty(self.db.char.keybindingKey) then
-        mergedKeybindings[self.db.char.keybindingKey] = ''
-    end
-    for k, v in pairs(self.db.char.keybindingModifiers) do
-        if v then
-            mergedKeybindings[k] = ''
-        end
-    end
+    local mergedKeybindings = merge_keybindings(self)
 
     -- compare both tables for exakt equality
     if table.length(pressedButtons) == table.length(mergedKeybindings) then
@@ -585,7 +592,7 @@ function show_results(self, filter)
 
                 -- FREQUENCY
                 local freq_frame = AceGUI:Create("Label")
-                freq_frame:SetWidth(20)
+                freq_frame:SetWidth(30)
                 freq_frame:SetText(get_freq(self, key, filter))
                 frame:AddChild(freq_frame)
                 
@@ -1011,8 +1018,6 @@ end
 function fill_search_data_table(self)
     self.db.char.searchDataTable = {}
     local db_search = self.db.char.searchDataTable
-    local disabled = L["INDEX_DISABLED"]
-    local enabled = L["INDEX_ENABLED"]
 
     --[=====[ ADDON --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.ADDON] then
@@ -1046,9 +1051,6 @@ function fill_search_data_table(self)
                 end
             end 
         end
-        enabled = enabled.."addons "
-    else
-        disabled = disabled.."addons "
     end
 
     --[=====[ MACROS --]=====]
@@ -1076,9 +1078,6 @@ function fill_search_data_table(self)
                 }
             end
         end
-        enabled = enabled.."macros "
-    else
-        disabled = disabled.."macros "
     end
 
     --[=====[ SPELLS --]=====]
@@ -1102,24 +1101,25 @@ function fill_search_data_table(self)
             end
             i = i + 1
         end
-        enabled = enabled.."spells "
-    else
-        disabled = disabled.."spells "
     end
 
     --[=====[ CMDs --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.CMD] then
-        db_search['Reload UI'] = {slash_cmd='/reload', tooltipText=L["DB_SEARCH_RELOAD_UI"], type=SearchIndexType.CMD}
-        db_search['Logout'] = {slash_cmd='/logout', tooltipText=L["DB_SEARCH_LOGOUT"], type=SearchIndexType.CMD}
-        db_search['/kl show'] = {slash_cmd='/kl show', tooltipText=L["DB_SEARCH_KL_SHOW"], type=SearchIndexType.CMD}
-        db_search['/kl search_freq print'] = {slash_cmd='/kl search_freq print', tooltipText=L["DB_SEARCH_KL_FREQ_PRINT"], type=SearchIndexType.CMD}
-        db_search['/kl search_table rebuild'] = {slash_cmd='/kl search_table rebuild', tooltipText=L["DB_SEARCH_KL_SEARCH_REBUILD"], type=SearchIndexType.CMD}
-        db_search['Dismount'] = {slash_cmd='/dismount', tooltipText=L["DB_SEARCH_DISMOUNT"], type=SearchIndexType.CMD}
-        db_search[MOUNT_JOURNAL_SUMMON_RANDOM_FAVORITE_MOUNT] = {slash_cmd='/run C_MountJournal.SummonByID(0)', tooltipText=MOUNT_JOURNAL_SUMMON_RANDOM_FAVORITE_MOUNT, type=SearchIndexType.CMD}
-        enabled = enabled.."slash commands "
-    else
-        disabled = disabled.."slash commands "
-    end
+    add_many(self, SearchIndexType.CMD, { 
+        {'Reload UI', '/reload', L["DB_SEARCH_RELOAD_UI"]},
+        {'Logout', '/logout', L["DB_SEARCH_LOGOUT"]},
+        {'/kl show', '/kl show', L["DB_SEARCH_KL_SHOW"]},
+        {'/kl search_freq print', '/kl search_freq print', L["DB_SEARCH_KL_FREQ_PRINT"]},
+        {'/kl search_table rebuild', '/kl search_table rebuild', L["DB_SEARCH_KL_SEARCH_REBUILD"]},
+        {'Dismount', '/dismount', L["DB_SEARCH_DISMOUNT"]},
+        {L['SUMMON_RANDOM_FAVORITE_MOUNT'], '/run C_MountJournal.SummonByID(0)'}
+    })
+
+
+    --[=====[ CVARS --]=====]
+    add_many(self, SearchIndexType.CVAR, { 
+        {L['TOGGLE_SOUND'], '/run SetCVar("Sound_EnableAllSound",GetCVar("Sound_EnableAllSound")=="0" and 1 or 0)'}
+    })
+
 
     --[=====[ ITEMS --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.ITEM] then
@@ -1139,9 +1139,6 @@ function fill_search_data_table(self)
                 end
             end
         end
-        enabled = enabled.."items "
-    else
-        disabled = disabled.."items "
     end
 
     --[=====[ MOUNTS --]=====]
@@ -1156,9 +1153,6 @@ function fill_search_data_table(self)
                 type = SearchIndexType.MOUNT
             }
         end
-        enabled = enabled.."mounts "
-    else
-        disabled = disabled.."mounts "
     end
     
     --[=====[ EQUIPMENT SETS --]=====]
@@ -1174,88 +1168,61 @@ function fill_search_data_table(self)
                 }
             end
         end
-        enabled = enabled.."equip_sets "
-    else
-        disabled = disabled.."equip_sets "
     end
     
     --[=====[ BLIZZARD FRAMES --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.BLIZZ_FRAME] then
-        -- global strings from https://www.townlong-yak.com/framexml/live/GlobalStrings.lua/DE
-        -- available functions: https://github.com/tomrus88/BlizzardInterfaceCode/blob/6922484b7b57ed6b3133ea54cdc828db94c7813d/Interface/FrameXML/UIParent.lua 
-        db_search[CHARACTER_BUTTON] = {
-            slash_cmd = '/run ToggleCharacter("PaperDollFrame")', 
-            tooltipText = L['OPEN']..' '..CHARACTER_BUTTON, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[SPELLBOOK_BUTTON] = {
-            slash_cmd = '/run ToggleSpellBook("spell")', 
-            tooltipText = L['OPEN']..' '..SPELLBOOK_BUTTON, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[TALENTS_BUTTON] = {
-            slash_cmd = '/run ToggleTalentFrame()', 
-            tooltipText = L['OPEN']..' '..TALENTS_BUTTON, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[FRIENDS] = {
-            slash_cmd = '/run ToggleFriendsFrame(1)', 
-            tooltipText = L['OPEN']..' '..FRIENDS, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[QUESTLOG_BUTTON] = {
-            slash_cmd = '/run ToggleQuestLog()', 
-            tooltipText = L['OPEN']..' '..QUESTLOG_BUTTON, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[LOOKINGFORGUILD ] = {
-            slash_cmd = '/run ToggleGuildFrame(1)', 
-            tooltipText = L['OPEN']..' '..LOOKINGFORGUILD , 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[GROUP_FINDER] = {
-            slash_cmd = '/run ToggleFrame(PVEFrame)', 
-            tooltipText = L['OPEN']..' '..GROUP_FINDER  , 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[ADVENTURE_JOURNAL] = {
-            slash_cmd = '/run ToggleEncounterJournal(1)', 
-            tooltipText = L['OPEN']..' '..ADVENTURE_JOURNAL  , 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[HELP_BUTTON] = {
-            slash_cmd = '/run ToggleHelpFrame()', 
-            tooltipText = L['OPEN']..' '..HELP_BUTTON  , 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[L['CALENDAR']] = {
-            slash_cmd = '/run if(not CalendarFrame) then LoadAddOn("Blizzard_Calendar") end Calendar_Toggle()', 
-            tooltipText = GAMETIME_TOOLTIP_TOGGLE_CALENDAR, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[ACHIEVEMENT_BUTTON] = {
-            slash_cmd = '/run ToggleAchievementFrame()', 
-            tooltipText = L['OPEN']..' '..ACHIEVEMENT_BUTTON, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        -- one tab
-        db_search[MOUNTS] = {
-            slash_cmd = '/run ToggleCollectionsJournal(1)', 
-            tooltipText = L['OPEN']..' '..MOUNTS, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
-        db_search[HEIRLOOMS] = {
-            slash_cmd = '/run ToggleCollectionsJournal(4)', 
-            tooltipText = L['OPEN']..' '..HEIRLOOMS, 
-            type = SearchIndexType.BLIZZ_FRAME
-        }
+    -- global strings from https://www.townlong-yak.com/framexml/live/GlobalStrings.lua/DE
+    -- available functions: https://github.com/tomrus88/BlizzardInterfaceCode/blob/6922484b7b57ed6b3133ea54cdc828db94c7813d/Interface/FrameXML/UIParent.lua 
+    add_many(self, SearchIndexType.BLIZZ_FRAME, {
+        {CHARACTER_BUTTON, '/run ToggleCharacter("PaperDollFrame")', L['OPEN']..' '..CHARACTER_BUTTON},
+        {SPELLBOOK_BUTTON, '/run ToggleSpellBook("spell")', L['OPEN']..' '..SPELLBOOK_BUTTON},
+        {TALENTS_BUTTON, '/run ToggleTalentFrame()', L['OPEN']..' '..TALENTS_BUTTON},
+        {FRIENDS, '/run ToggleFriendsFrame(1)', L['OPEN']..' '..FRIENDS},
+        {QUESTLOG_BUTTON, '/run ToggleQuestLog()', L['OPEN']..' '..QUESTLOG_BUTTON},
+        {LOOKINGFORGUILD, '/run ToggleGuildFrame(1)', L['OPEN']..' '..LOOKINGFORGUILD},
+        {GROUP_FINDER, '/run ToggleFrame(PVEFrame)', L['OPEN']..' '..GROUP_FINDER},
+        {ADVENTURE_JOURNAL, '/run ToggleEncounterJournal(1)', L['OPEN']..' '..ADVENTURE_JOURNAL},
+        {HELP_BUTTON, '/run ToggleHelpFrame()', L['OPEN']..' '..HELP_BUTTON},
+        {L['CALENDAR'], '/run if(not CalendarFrame) then LoadAddOn("Blizzard_Calendar") end Calendar_Toggle()', GAMETIME_TOOLTIP_TOGGLE_CALENDAR},
+        {ACHIEVEMENT_BUTTON, '/run ToggleAchievementFrame()', L['OPEN']..' '..ACHIEVEMENT_BUTTON},
+        {MOUNTS, '/run ToggleCollectionsJournal(1)', L['OPEN']..' '..MOUNTS},
+        {HEIRLOOMS, '/run ToggleCollectionsJournal(4)', L['OPEN']..' '..HEIRLOOMS}
+    })
 
-        enabled = enabled.."blizz_frames "
-    else
-        disabled = disabled.."blizz_frames "
-    end
-
+    -- print out start message
+    local disabled = L["INDEX_DISABLED"]
+    local enabled = L["INDEX_ENABLED"]
     self:Print(L["INDEX_HEADER"])
+    for type, type_enabled in pairs(self.db.char.searchDataWhatIndex) do
+        if type_enabled then
+            enabled = enabled..type..' '
+        else
+            disabled = disabled..type..' '
+        end
+    end
     self:Print(enabled)
     self:Print(disabled)
+
+    local keybindings_list = {}
+    for k,v in pairs(merge_keybindings(self)) do
+        table.insert(keybindings_list, k)
+    end
+
+    self:Print(L["INDEX_FOOTER"](table.concat(keybindings_list, '+')))
+end
+
+function add_many(self, type, tables) 
+    for k,v in pairs(tables) do
+        add_one(self, type, v)
+    end
+end
+
+function add_one(self, type, data)
+    if self.db.char.searchDataWhatIndex[type] then
+        -- tooltip default value is the key
+        if not data[3] then
+            data[3] = data[1]
+        end
+        self.db.char.searchDataTable[data[1]] = { slash_cmd=data[2], tooltipText=data[3], type=type}
+    end
 end

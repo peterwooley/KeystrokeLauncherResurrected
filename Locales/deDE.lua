@@ -22,6 +22,7 @@ L["config_reset_name"] = "Alles zurücksetzen"
 L["config_reset_desc"] = "Mache einen factory reset"
 L["config_reset_confirmText"] = "Alle Keystroke Launcher Datenbanken werden auf die Standardwerte zurückgesetzt  - weitermachen?"
 
+-- search table
 L["config_search_table_name"] = "Suchindex"
 L["config_search_table_header_one"] = "Der Suchindex."
 L["config_search_table_rebuild"] = "Aktualisieren"
@@ -34,6 +35,8 @@ L["config_search_freq_table_desc"] = "Der Häufigkeitsindex merkt sich wie oft d
 L["config_search_freq_table_clear_name"] = "Clear"
 L["config_search_freq_table_clear_desc"] = "Setze den Häufigkeitsindex zurück"
 L["config_search_freq_table_cleared"] = "Häufigkeitsindex zurückgesetzt"
+L['CONFIG_SEARCH_TABLE_CUSTOM_HEADER'] = "Eigene Suchdaten"
+L['CONFIG_SEARCH_TABLE_CUSTOM_CLEAR'] = "Zurücksetzen"
 
 L['CONFIG_INDEX_TYPES_ADDON'] = 'Addons'
 L['CONFIG_INDEX_TYPES_MACRO'] = 'Makros'
@@ -43,6 +46,7 @@ L['CONFIG_INDEX_TYPES_ITEM'] = 'Gegenstände'
 L['CONFIG_INDEX_TYPES_MOUNT'] = 'Reittiere'
 L['CONFIG_INDEX_TYPES_EQUIP_SET'] = 'Ausrüstungs-Sets'
 L['CONFIG_INDEX_TYPES_BLIZZ_FRAME'] = 'Blizzard Fenster'
+L['CONFIG_INDEX_TYPES_CVAR'] = 'CVARs'
 
 -- look n feel
 L['CONFIG_LOOK_N_FEEL_HEADER'] = 'Anzeigen / verstecken von Elementen'
@@ -60,6 +64,8 @@ Beispiel: wenn du `r4` eintippst, wird in der Suchtyp Kategorie `4` nach dem Buc
 
 Anmerkung 1: funktioniert nur wenn die Suchtyp Checkboxen auch aktiviert sind.
 Anmerkung 2: weil Zahlen dann als spezielle Kontroll-Charaktere behandelt werden, kannst du sie nicht mehr als filter verwenden."]]
+L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'] = 'Edit Modus'
+L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'Zeigt / versteckt die Checkbos die den Edit Modus an / aus schaltet.'
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Inhalt der Suchdatenbank:"
@@ -67,6 +73,9 @@ L["PRINT_SEARCH_DATA_FREQ"] = "Inhalt der Häufigkeitsdatenbank:"
 L["INDEX_HEADER"] = "Suchdatenbank erfolgreich aktualisiert."
 L["INDEX_DISABLED"] = "  Deaktiviert: "
 L["INDEX_ENABLED"] = "  Aktiviert: "
+L['INDEX_FOOTER'] = function(X)
+    return 'Drücke ' .. X .. ' um anzufangen!';
+end
 
 --[=====[ TOOLTIPS --]=====]
 L["DB_SEARCH_RELOAD_UI"] = "Lade die UI neu"
@@ -78,5 +87,7 @@ L["DB_SEARCH_KL_SEARCH_REBUILD"] = "Aktualisiere den Suchindex"
 
 -- search index
 L['CALENDAR'] = "Kalender"
+L['SUMMON_RANDOM_FAVORITE_MOUNT'] = "Zufälliges Lieblingsreittiert beschwören."
+L['TOGGLE_SOUND'] = "Schalte den globalen Ton an / aus"
 
 end

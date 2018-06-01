@@ -46,6 +46,7 @@ L['CONFIG_INDEX_TYPES_ITEM'] = 'Items'
 L['CONFIG_INDEX_TYPES_MOUNT'] = 'Mounts'
 L['CONFIG_INDEX_TYPES_EQUIP_SET'] = 'Equipment Sets'
 L['CONFIG_INDEX_TYPES_BLIZZ_FRAME'] = 'Blizzard Frames'
+L['CONFIG_INDEX_TYPES_CVAR'] = 'CVARs'
 
 -- look n feel
 L['CONFIG_LOOK_N_FEEL_HEADER'] = 'Show / hide elements'
@@ -63,8 +64,8 @@ Example: if you type in `r4`, the tool will filter the result list for the searc
 
 Note 1: only works when the Type Checkboses are enabled.
 Note 2: because numbers are then special control characters, you cannot use them for filtering anymore]]
-L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'] = 'edit mode'
-L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'edit mode'
+L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'] = 'Edit Mode'
+L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'Show/ hide the checkbox which switches the edit mode on / off.'
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Content of search frequency index:"
@@ -72,6 +73,9 @@ L["PRINT_SEARCH_DATA_FREQ"] = "Content of search data index:"
 L["INDEX_HEADER"] = "Search index refreshed."
 L["INDEX_DISABLED"] = "  Disabled: "
 L["INDEX_ENABLED"] = "  Enabled: "
+L['INDEX_FOOTER'] = function(X)
+    return 'Hit ' .. X .. ' to get started!';
+end
 
 --[=====[ TOOLTIPS --]=====]
 L["DB_SEARCH_RELOAD_UI"] = "Reload the UI"
@@ -83,5 +87,7 @@ L["DB_SEARCH_KL_SEARCH_REBUILD"] = "Refresh the search index"
 
 -- search index
 L['CALENDAR'] = "Calendar"
+L['SUMMON_RANDOM_FAVORITE_MOUNT'] = "Summon random favorite mount."
+L['TOGGLE_SOUND'] = "Switch global sound on / off"
 
 end
