@@ -55,6 +55,8 @@ function KeystrokeLauncher:OnInitialize()
         self.db.char.kl['enable_quick_filter'] = false
         self.db.char.kl['show_edit_mode_checkbox'] = false
         self.db.char.kl['edit_mode_on'] = false
+        self.db.char.kl['enable_top_macros'] = false
+        self.db.char.kl['enable_spell_icons'] = false
     end
 
     --[=====[ FILL SEARCH DATA TABLE --]=====]
@@ -170,9 +172,33 @@ function KeystrokeLauncher:OnInitialize()
                         end,
                         get = function(info) return self.db.char.kl['enable_quick_filter'] end
                     },
-                    descc = {
+                    desc_type_marker = {
                         order = 8,
                         name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'],
+                        type = "description"
+                    },
+                    show_top_macros = {
+                        order = 9,
+                        name = L['CONFIG_LOOK_N_FEEL_TOP_MACROS_NAME'],
+                        type = "toggle",
+                        set = function(info, val) self.db.char.kl['enable_top_macros'] = val end,
+                        get = function(info) return self.db.char.kl['enable_top_macros'] end
+                    },
+                    desc_top_macros = {
+                        order = 10,
+                        name = L['CONFIG_LOOK_N_FEEL_TOP_MACROS_DESC'],
+                        type = "description"
+                    },
+                    show_spell_icons = {
+                        order = 11,
+                        name = "Use Clickable Icons",
+                        type = "toggle",
+                        set = function(info, val) self.db.char.kl['enable_spell_icons'] = val end,
+                        get = function(info) return self.db.char.kl['enable_spell_icons'] end
+                    },
+                    desc_spell_icons = {
+                        order = 12,
+                        name = "If enabled, you can execute the item by clicking on the icon. Really cool feature, but it lags. Until I find a solutions, this option is deactivated by default.",
                         type = "description"
                     }
                 }
@@ -405,6 +431,7 @@ function show_main_frame(self)
             ClearOverrideBindings(KeyboardListenerFrame) 
         end)
         AceGUI:Release(widget) 
+        update_top_macros(self)
     end)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(KL_MAIN_FRAME_WIDTH)
@@ -413,6 +440,7 @@ function show_main_frame(self)
     KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
         SEARCH_EDITBOX:SetFocus()
         if keyboard_key == 'ENTER' then
+
             execute_macro(self)
         -- no clue why, but this leads to the main configuration window not propagatint esc key
         -- elseif keyboard_key == 'ESCAPE' then
@@ -666,16 +694,34 @@ function show_results(self, filter)
 end
 
 function create_interactive_label(self, key, filter, k, frame, key_data)
+    --[=====[ SPELL ICON --]=====]
+    if self.db.char.kl['enable_spell_icons'] then
+        local g = AceGUI:Create("CheckButton")
+        if key_data.icon then
+            g:SetIcon(key_data.icon)
+        else
+            g:SetIcon(ICON_BASE_PATH..'transparent.blp')
+        end
+        g:SetMacroText(key_data.slash_cmd)
+        g.frame:SetScript("PostClick", function()
+            hide_all()
+        end)
+        frame:AddChild(g)
+    end
+
+    --[=====[ INTERACTIVE LABEL --]=====]
     local label = AceGUI:Create("InteractiveLabel")
     if self.db.char.kl['debug'] then
         label:SetText(key.." ("..get_freq(self, key, filter)..") (idx: "..k..")")
     else
         label:SetText(key)
     end
-    if key_data.icon then
-        label:SetImage(key_data.icon)
-    else
-        label:SetImage(ICON_BASE_PATH..'transparent.blp')
+    if not self.db.char.kl['enable_spell_icons'] then
+        if key_data.icon then
+            label:SetImage(key_data.icon)
+        else
+            label:SetImage(ICON_BASE_PATH..'transparent.blp')
+        end
     end
     label:SetWidth(KL_MAIN_FRAME_WIDTH-70)
     label:SetHeight(15)
@@ -708,7 +754,8 @@ function execute_macro(self)
         -- save freq
         local current_search = SEARCH_EDITBOX:GetText()
         if is_nil_or_empty(current_search) then
-            current_search = 'EMPTY'
+            -- current_search = 'EMPTY'
+            current_search = CURRENTLY_SELECTED_LABEL_KEY
         end
         local freq = 1
         local current_search_freq = self.db.char.searchDataFreq[current_search]
@@ -725,6 +772,36 @@ function execute_macro(self)
     end
 end
 
+function update_top_macros(self)
+    if self.db.char.kl['enable_top_macros'] then
+        local top_table = {}
+        -- first aggreate search frequency on key
+        for k,v in pairs(self.db.char.searchDataFreq) do
+            if top_table[v.key] then
+                top_table[v.key] = top_table[v.key] + v.freq
+            else
+                top_table[v.key] = v.freq
+            end
+        end
+
+        -- then create a sorted table based on aggr freq
+        local sorted_table = {}
+        for k,v in pairs(top_table) do
+            table.insert(sorted_table, {k, v})
+        end
+        table.sort(sorted_table, function(a,b) return a[2] > b[2] end)
+ 
+        for k,v in ipairs(sorted_table) do
+            if k < 6 then
+                data = get_search_data(self, v[1])
+                print('kl-top-'..k, data.slash_cmd)
+                macroId = get_or_create_maco('kl-top-'..k, true)
+                EditMacro(macroId, nil, nil, "#tooltipdesc "..data.tooltipText.."^"..data.slash_cmd.."\n"..data.slash_cmd, 1, 1); 
+            end
+        end
+    end
+end
+
 function hide_all()
     KL_MAIN_FRAME:Hide()
     GameTooltip:Hide()
@@ -733,7 +810,7 @@ end
 function print_search_data_freq(self)
     self:Print(L["PRINT_SEARCH_DATA_FREQ"])
     for k,v in pairs(self.db.char.searchDataFreq) do
-        self:Print('', el(k, 8), el(v.freq, 3), v.key)
+        self:Print(' ', v.freq, v.key)
     end
 end
 

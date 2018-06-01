@@ -27,7 +27,9 @@ To change the keybinding go into the configuration menu: `ctrl+alt` --> type in 
 **How To:**
 
 * [Associate a keyword to an item](docs/assoc.md)
-* [Experimental quick search type filter setting](docs/quick.md)
+* [Edit the search index or add new items](docs/edit.md)
+* [Experimental: quick search type filter setting](docs/quick.md)
+* [Experimental: automatic shortcut macros](docs/shortcut.md)
 
 ## The search index can contain
 

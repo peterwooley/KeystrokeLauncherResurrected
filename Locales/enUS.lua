@@ -66,6 +66,10 @@ Note 1: only works when the Type Checkboses are enabled.
 Note 2: because numbers are then special control characters, you cannot use them for filtering anymore]]
 L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'] = 'Edit Mode'
 L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'Show/ hide the checkbox which switches the edit mode on / off.'
+L['CONFIG_LOOK_N_FEEL_TOP_MACROS_NAME'] = 'Write Top Marcos'
+L['CONFIG_LOOK_N_FEEL_TOP_MACROS_DESC'] = [[If enabled, the top 5 most executed items will be saved into character specific macros with the naming `kl-top-n`, where n is 1 to 5. Macros will be created if they do not exist and there is free macro space.
+
+To see more informative macro tooltips, please install the Custom Tooltips addon (https://www.curseforge.com/wow/addons/custom-tooltips).]]
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Content of search frequency index:"

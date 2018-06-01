@@ -36,10 +36,10 @@ function item_link_to_string(itemLink)
     return itemLink:match("|H(.*)|h%[(.*)%]|h")
 end
 
-function get_or_create_maco(name)
+function get_or_create_maco(name, per_char)
     macroId = GetMacroIndexByName(name)
     if macroId == 0 then
-        macroId = CreateMacro(name, "INV_MISC_QUESTIONMARK", "", nil);
+        macroId = CreateMacro(name, "INV_MISC_QUESTIONMARK", "", per_char);
     end
     return macroId
 end

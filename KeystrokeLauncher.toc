@@ -8,5 +8,6 @@
 
 embeds.xml
 Locales\Locales.xml
+AceGUIWidget-CheckButton.lua
 Helper.lua
 Core.lua

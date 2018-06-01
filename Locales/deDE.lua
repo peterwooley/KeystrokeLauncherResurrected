@@ -63,9 +63,9 @@ L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'] = [[Wenn aktiviert werden Nummern im S
 Beispiel: wenn du `r4` eintippst, wird in der Suchtyp Kategorie `4` nach dem Buchstaben `r` gefiltert. 
 
 Anmerkung 1: funktioniert nur wenn die Suchtyp Checkboxen auch aktiviert sind.
-Anmerkung 2: weil Zahlen dann als spezielle Kontroll-Charaktere behandelt werden, kannst du sie nicht mehr als filter verwenden."]]
+Anmerkung 2: weil Zahlen dann als spezielle Kontroll-Charaktere behandelt werden, kannst du sie nicht mehr als Filter verwenden.]]
 L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'] = 'Edit Modus'
-L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'Zeigt / versteckt die Checkbos die den Edit Modus an / aus schaltet.'
+L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'Zeigt / versteckt die Checkbox die den Edit Modus an / aus schaltet.'
 
 --[=====[ CODE --]=====]
 L["PRINT_SEARCH_DATA_TABLE"] = "Inhalt der Suchdatenbank:"
