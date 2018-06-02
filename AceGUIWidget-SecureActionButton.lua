@@ -1,8 +1,7 @@
 --[[-----------------------------------------------------------------------------
-Custom CheckButton Wrapper
-Graphical Button.
+SecureActionButton
 -------------------------------------------------------------------------------]]
-local Type, Version = "CheckButton", 1
+local Type, Version = "SecureActionButton", 1
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -10,8 +9,6 @@ if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 local pairs = pairs
 
 -- WoW APIs
--- local _G = _G
--- local PlaySound, CreateFrame, UIParent = PlaySound, CreateFrame, UIParent
 local CreateFrame, UIParent = CreateFrame, UIParent
 
 --[[-----------------------------------------------------------------------------
@@ -22,13 +19,11 @@ local methods = {
 		-- restore default values
 		self:SetHeight(24)
 		self:SetWidth(24)
-        self:SetIcon()
+        self:SetTexture()
         self:SetMacroText()
 	end,
 
-	-- ["OnRelease"] = nil,
-
-    ["SetIcon"] = function(self, spell_id)
+    ["SetTexture"] = function(self, spell_id)
         -- http://www.wowinterface.com/forums/showpost.php?p=255359&postcount=4
         local t = self.frame:CreateTexture(nil,"BACKGROUND",nil,-6)
         t:SetTexture(spell_id)
@@ -38,6 +33,7 @@ local methods = {
     end,
     
     ["SetMacroText"] = function(self, macro_text)
+        self.frame:SetAttribute("type1", "macro")
         self.frame:SetAttribute("macrotext1", macro_text)
 	end,
 
@@ -47,8 +43,9 @@ local methods = {
 Constructor
 -------------------------------------------------------------------------------]]
 local function Constructor()
-    local frame = CreateFrame("CheckButton", "ExtraBarButton"..AceGUI:GetNextWidgetNum(Type), UIParent, "ActionBarButtonTemplate")
-    frame:SetAttribute("type1", "macro")
+    local num = AceGUI:GetNextWidgetNum(Type)
+    local frame = CreateFrame("Button", "KLButton"..num, UIParent, "SecureActionButtonTemplate")
+    frame:Hide()
 
 	local widget = {
 		frame = frame,
