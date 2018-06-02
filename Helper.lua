@@ -25,7 +25,7 @@ end
 
 -- check if given slash command exists in _G
 function slash_cmd_exists(slash_cmd)
-    for k, v in pairs(_G) do
+    for _, v in pairs(_G) do
         if slash_cmd == v then
             return true
         end
@@ -37,14 +37,14 @@ function item_link_to_string(itemLink)
 end
 
 function get_or_create_macro(name, per_char)
-    macroId = GetMacroIndexByName(name)
+    local macroId = GetMacroIndexByName(name)
     if macroId == 0 then
         macroId = CreateMacro(name, "INV_MISC_QUESTIONMARK", "", per_char);
     end
     return macroId
 end
 
-function is_nil_or_empty(val) 
+function is_nil_or_empty(val)
     if val == nil or val == '' then
         return true
     else
@@ -61,8 +61,8 @@ end
 -- ENUM from https://gist.github.com/szensk/7986347f09742337b36e
 -- this enum is really arkward to handle, planing to replace it with something else
 local enummt = {
-        __index = function(table, key) 
-            if rawget(table.enums, key) then 
+        __index = function(table, key)
+            if rawget(table.enums, key) then
             return key
         end
     end
@@ -74,15 +74,15 @@ function Enumm(t)
 end
 
 function enumm_to_table(enumm)
-    rv = {}
-    for k,v in pairs(enumm) do
-        for k1,v1 in pairs(v) do
+    local rv = {}
+    for _,v in pairs(enumm) do
+        for k1,_ in pairs(v) do
             rv[k1] = L['CONFIG_INDEX_TYPES_'..k1]
         end
     end
     return rv
 end
- 
+
 -- https://gist.github.com/haggen/2fd643ea9a261fea2094
 local charset = {}  do -- [0-9a-zA-Z]
     for c = 48, 57  do table.insert(charset, string.char(c)) end
