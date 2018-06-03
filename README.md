@@ -48,10 +48,6 @@ To change the keybinding go into the configuration menu: `ctrl+alt` --> type in 
 * Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with a diffent slash commands. See [here](docs/edit.md) how to edit the search database.
 * The way the up/down keys work is very basic, it does not handle resizing, manual scrolling using the mouse wheel, etc.
 * Creating clickable icons for every item leads to lag when opening up the main window. Therefore it is currently limited to the first 10 items.
+* I think there is a memory leak somehwere, at least the memory consumption rises everytime you open/ close the main window.
 
-## Roadmap
-
-* Add ability to execute subcommands, based on currently selected item
-* Possibilty to modify the search index per GUI
-
-Let me know if you find any bugs :)
+## Let me know if you find any bugs or have a feature request :)
