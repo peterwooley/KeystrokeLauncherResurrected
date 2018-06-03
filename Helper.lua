@@ -94,3 +94,25 @@ function randomString(length)
     if not length or length <= 0 then return '' end
     return randomString(length - 1) .. charset[math.random(1, #charset)]
 end
+
+-- http://snipplr.com/view/13092/strlpad--pad-string-to-the-left/
+string.lpad = function(str, len, char)
+    str = tostring(str)
+    if char == nil then char = ' ' end
+    return str .. string.rep(char, len - #str)
+end
+
+-- http://lua-users.org/wiki/CopyTable
+function shallowcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in pairs(orig) do
+            copy[orig_key] = orig_value
+        end
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end

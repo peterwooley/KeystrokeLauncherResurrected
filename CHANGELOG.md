@@ -1,12 +1,12 @@
 # Changelog
 
-## v1.0
+## v0.9.9
 
 * NEW: edit mode for the search database
 * NEW: custom search database
 * NEW: added the first CVAR (toggle global sound on/off)
+* NEW: clickable action buttons instead of icons ... when you click on them, the item will be execute. Only works for the first 10 items currently, because of lag.
 * NEW: experimental automatic macro writing: the top 5 results will be written into macros at window close
-* NEW: experimental action buttons instead of icons ... when you click on them, the item will be execute. Sadly it lags, therefore it is deactivated by default until I found a solution.
 
 ## v0.9.5
 

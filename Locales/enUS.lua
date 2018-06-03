@@ -2,7 +2,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("KeystrokeLauncher", "enUS", true)
 
 if L then
 
---[=====[ OPTIONS --]=====] 
+--[=====[ OPTIONS --]=====]
 -- share
 L["config_print"] = "print"
 L["config_keybinding"] = "Keybinding"
@@ -60,7 +60,7 @@ L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'] = "Experimental Settings"
 L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'] = "Quick Search Type Filter"
 L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'] = [[When enabled, numbers in the search string will be interpreted as search types. The search type category id is the number in in square brackets.
 
-Example: if you type in `r4`, the tool will filter the result list for the search type category with the id `4` and the string `r`. 
+Example: if you type in `r4`, the tool will filter the result list for the search type category with the id `4` and the string `r`.
 
 Note 1: only works when the Type Checkboses are enabled.
 Note 2: because numbers are then special control characters, you cannot use them for filtering anymore]]
@@ -70,10 +70,10 @@ L['CONFIG_LOOK_N_FEEL_TOP_MACROS_NAME'] = 'Write Top Marcos'
 L['CONFIG_LOOK_N_FEEL_TOP_MACROS_DESC'] = [[If enabled, the top 5 most executed items will be saved into character specific macros with the naming `kl-top-n`, where n is 1 to 5. Macros will be created if they do not exist and there is free macro space.
 
 To see more informative macro tooltips, please install the Custom Tooltips addon (https://www.curseforge.com/wow/addons/custom-tooltips).]]
+L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_NAME'] = 'Use Clickable Item Icons'
+L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_DESC'] = 'If enabled, you can execute the item by clicking on the icon. Disable to have smaller icons.'
 
 --[=====[ CODE --]=====]
-L["PRINT_SEARCH_DATA_TABLE"] = "Content of search frequency index:"
-L["PRINT_SEARCH_DATA_FREQ"] = "Content of search data index:"
 L["INDEX_HEADER"] = "Search index refreshed."
 L["INDEX_DISABLED"] = "  Disabled: "
 L["INDEX_ENABLED"] = "  Enabled: "

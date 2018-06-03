@@ -9,7 +9,7 @@ Execute commands fast, no need to clutter your desktop with a lot of icons, just
 * **Configuration UI**
 * **Configurable look and feel**
 
-Idea based on the awesome keystroke launcher for Windows [Keyperinha](http://keypirinha.com/).
+Idea based on the awesome keystroke launcher for Windows [Keyperinha](http://keypirinha.com/). Does not work in combat, due to Blizzard API limiations. Needs one free slot in the "General" macro tab.
 
 ## Quickstart
 
@@ -29,7 +29,6 @@ To change the keybinding go into the configuration menu: `ctrl+alt` --> type in 
 * [Associate a keyword to an item](docs/assoc.md)
 * [Edit the search index or add new items](docs/edit.md)
 * [Experimental: quick search type filter setting](docs/quick.md)
-* [Experimental: automatic shortcut macros](docs/shortcut.md)
 
 ## The search index can contain
 
@@ -46,10 +45,9 @@ To change the keybinding go into the configuration menu: `ctrl+alt` --> type in 
 
 ## Gotchas& Known Issues
 
-* Does not work in combat, due to Blizzard API limiations
-* Needs one free slot in the "General" macro tab
-* Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with a diffent slash commands. Am not sure how to salve that atm.
-* The way the autoscrolling works right now is very basic, it does not handle resizing or manual scrolling.
+* Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with a diffent slash commands. See [here](docs/edit.md) how to edit the search database.
+* The way the up/down keys work is very basic, it does not handle resizing, manual scrolling using the mouse wheel, etc.
+* Creating clickable icons for every item leads to lag when opening up the main window. Therefore it is currently limited to the first 10 items.
 
 ## Roadmap
 

@@ -2,7 +2,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("KeystrokeLauncher", "deDE", false)
 
 if L then
 
---[=====[ OPTIONS --]=====] 
+--[=====[ OPTIONS --]=====]
 -- share
 L["config_print"] = "Anzeigen"
 L["config_keybinding"] = "Tastenbelegung"
@@ -60,16 +60,17 @@ L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'] = "Experimentale Einstellungen"
 L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'] = "Schneller Suchtyp Filter"
 L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'] = [[Wenn aktiviert werden Nummern im Suchfeld als Suchtyp interpretiert. Die Suchtyp id ist die Nummer in eckigen Klammern.
 
-Beispiel: wenn du `r4` eintippst, wird in der Suchtyp Kategorie `4` nach dem Buchstaben `r` gefiltert. 
+Beispiel: wenn du `r4` eintippst, wird in der Suchtyp Kategorie `4` nach dem Buchstaben `r` gefiltert.
 
 Anmerkung 1: funktioniert nur wenn die Suchtyp Checkboxen auch aktiviert sind.
 Anmerkung 2: weil Zahlen dann als spezielle Kontroll-Charaktere behandelt werden, kannst du sie nicht mehr als Filter verwenden.]]
 L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'] = 'Edit Modus'
 L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'Zeigt / versteckt die Checkbox die den Edit Modus an / aus schaltet.'
+L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_NAME'] = 'Benutze klickbare Icons'
+L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_DESC'] = 'Wenn an, kannst du auf die Icons klicken um den Eintrag auszuführen. Deaktiviere es für kleinere Icons.'
+
 
 --[=====[ CODE --]=====]
-L["PRINT_SEARCH_DATA_TABLE"] = "Inhalt der Suchdatenbank:"
-L["PRINT_SEARCH_DATA_FREQ"] = "Inhalt der Häufigkeitsdatenbank:"
 L["INDEX_HEADER"] = "Suchdatenbank erfolgreich aktualisiert."
 L["INDEX_DISABLED"] = "  Deaktiviert: "
 L["INDEX_ENABLED"] = "  Aktiviert: "

@@ -25,6 +25,7 @@ local SCROLLCONTAINER
 local SEARCH_TYPE_CHECKBOXES
 local SEARCH_EDITBOX
 local KEYBOARD_LISTENER_FRAME
+local EDIT_HEADER
 
 -- other
 local KL_MAIN_FRAME_WIDTH
@@ -33,8 +34,7 @@ local SEARCH_TABLE_INIT_DONE
 local CURRENTLY_SELECTED_LABEL_INDEX
 local CURRENTLY_SELECTED_LABEL_KEY
 local SEARCH_TABLE_TO_LABEL
-local CURR_MIN
-local CURR_MAX
+local RELOADING -- used to mark an auto reload of the gui
 
 -- let's go
 function KeystrokeLauncher:OnInitialize()
@@ -52,11 +52,14 @@ function KeystrokeLauncher:OnInitialize()
     end
     if self.db.char.searchDataWhatIndex == nil then
         self.db.char.searchDataWhatIndex = {
+            [SearchIndexType.ADDON] = false,
+            [SearchIndexType.MACRO] = false,
             [SearchIndexType.SPELL] = true,
+            [SearchIndexType.CMD] = true,
             [SearchIndexType.ITEM] = true,
+            [SearchIndexType.MOUNT] = true,
             [SearchIndexType.EQUIP_SET] = true,
             [SearchIndexType.BLIZZ_FRAME] = true,
-            [SearchIndexType.CMD] = true,
             [SearchIndexType.CVAR] = true
         }
     end
@@ -86,9 +89,6 @@ function KeystrokeLauncher:OnInitialize()
             SEARCH_TABLE_INIT_DONE = true
         end)
     end
-
-    -- depending on if the type checkboxes are shonw, the intial window size is smaller/ bigger
-    set_main_frame_size(self)
 
     --[=====[ SLASH COMMANDS/ CONFIG OPTIONS --]=====]
     local options = {
@@ -173,13 +173,23 @@ function KeystrokeLauncher:OnInitialize()
                         end,
                         get = function() return self.db.char.kl['show_edit_mode_checkbox'] end
                     },
-                    header_experimental = {
+                    show_spell_icons = {
                         order = 6,
+                        name = L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_NAME'],
+                        desc = L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_DESC'],
+                        type = "toggle",
+                        descStyle = "inline",
+                        set = function(_, val) self.db.char.kl['enable_spell_icons'] = val end,
+                        get = function() return self.db.char.kl['enable_spell_icons'] end
+                    },
+                    -- experimental look n feel switches
+                    header_experimental = {
+                        order = 8,
                         name = L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'],
                         type = "header"
                     },
                     enable_quick_filter = {
-                        order = 7,
+                        order = 9,
                         name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'],
                         type = "toggle",
                         set = function(_, val)
@@ -192,32 +202,20 @@ function KeystrokeLauncher:OnInitialize()
                         get = function() return self.db.char.kl['enable_quick_filter'] end
                     },
                     desc_type_marker = {
-                        order = 8,
+                        order = 10,
                         name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'],
                         type = "description"
                     },
                     show_top_macros = {
-                        order = 9,
+                        order = 11,
                         name = L['CONFIG_LOOK_N_FEEL_TOP_MACROS_NAME'],
                         type = "toggle",
                         set = function(_, val) self.db.char.kl['enable_top_macros'] = val end,
                         get = function() return self.db.char.kl['enable_top_macros'] end
                     },
                     desc_top_macros = {
-                        order = 10,
-                        name = L['CONFIG_LOOK_N_FEEL_TOP_MACROS_DESC'],
-                        type = "description"
-                    },
-                    show_spell_icons = {
-                        order = 11,
-                        name = "Use Clickable Icons",
-                        type = "toggle",
-                        set = function(_, val) self.db.char.kl['enable_spell_icons'] = val end,
-                        get = function() return self.db.char.kl['enable_spell_icons'] end
-                    },
-                    desc_spell_icons = {
                         order = 12,
-                        name = "If enabled, you can execute the item by clicking on the icon. Really cool feature, but it lags. Until I find a solutions, this option is deactivated by default.",
+                        name = L['CONFIG_LOOK_N_FEEL_TOP_MACROS_DESC'],
                         type = "description"
                     }
                 }
@@ -261,12 +259,6 @@ function KeystrokeLauncher:OnInitialize()
                         order = 1,
                         name = L["config_search_table_header_one"],
                         type = "header"
-                    },
-                    print = {
-                        order = 2,
-                        name = L["config_print"],
-                        type = "execute",
-                        func = function() print_search_data_table(self) end
                     },
                     rebuild = {
                         order = 3,
@@ -382,8 +374,7 @@ function KeystrokeLauncher:OnInitialize()
     KEYBOARD_LISTENER_FRAME:SetPropagateKeyboardInput(true)
     KEYBOARD_LISTENER_FRAME:SetScript("OnKeyDown", function(_, keyboard_key)
         if check_key_bindings(self, keyboard_key) then
-            show_main_frame(self)
-            show_results(self)
+            start(self)
         end
     end)
 end
@@ -399,6 +390,21 @@ function merge_keybindings(self)
         end
     end
     return mergedKeybindings
+end
+
+-- programmatically re-render the main frame
+function reload_main_frame(self)
+    RELOADING = true
+    hide_all()
+    RELOADING = false
+    start(self)
+end
+
+-- window start up logic
+function start(self)
+    set_main_frame_size(self)
+    show_main_frame(self)
+    show_results(self)
 end
 
 function check_key_bindings(self, keyboard_key)
@@ -446,11 +452,19 @@ function show_main_frame(self)
     KL_MAIN_FRAME = AceGUI:Create("Frame")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
     KL_MAIN_FRAME:SetCallback("OnClose", function(widget)
-        C_Timer.After(0.2, function()
-            ClearOverrideBindings(KEYBOARD_LISTENER_FRAME)
-        end)
+        if not RELOADING then
+            -- do not clear keybinding if we are just regenerating the ui
+            C_Timer.After(0.2, function()
+                ClearOverrideBindings(KEYBOARD_LISTENER_FRAME)
+            end)
+        end
         AceGUI:Release(widget)
         update_top_macros(self)
+        if self.db.char.kl['debug'] then
+            -- print_search_data_freq(self)
+            -- print_custom_search_db(self)
+            self:Print(get_mem_usage())
+        end
     end)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(KL_MAIN_FRAME_WIDTH)
@@ -459,11 +473,7 @@ function show_main_frame(self)
     KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
         SEARCH_EDITBOX:SetFocus()
         if keyboard_key == 'ENTER' then
-
             execute_macro(self)
-        -- no clue why, but this leads to the main configuration window not propagatint esc key
-        -- elseif keyboard_key == 'ESCAPE' then
-        --     hide_all()
         elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
             move_selector(self, keyboard_key)
         end
@@ -481,40 +491,16 @@ function show_main_frame(self)
 
     --[=====[ EDIT MODE CHECKBOX AND ADD NEW --]=====]
     if self.db.char.kl['show_edit_mode_checkbox'] then
-        local add_button = AceGUI:Create("Button")
-
-        -- enable/ disable edit mode
         local edit_mode_checkbox = AceGUI:Create("CheckBox")
-        edit_mode_checkbox:SetWidth(25)
+        edit_mode_checkbox:SetWidth(120)
+        edit_mode_checkbox:SetLabel(L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'])
         edit_mode_checkbox:SetValue(self.db.char.kl['edit_mode_on'])
         edit_mode_checkbox:SetCallback("OnValueChanged", function(_, _, value)
             self.db.char.kl['edit_mode_on'] = value
-            set_main_frame_size(self)
-            show_results(self, SEARCH_EDITBOX:GetText())
-            add_button:SetDisabled(not value)
-            set_main_frame_size(self)
+            reload_main_frame(self)
         end)
         KL_MAIN_FRAME:AddChild(edit_mode_checkbox)
-
-        -- add new line
-        add_button:SetWidth(40)
-        add_button:SetText('+')
-        -- wanted to use .frame:Hide() but that does not work (it's still visible)
-        -- then I wanted to use :Release(), but then I get an "widget already released"
-        -- error when closing the main windo
-        add_button:SetCallback("OnClick", function()
-            -- if you change the REPLACE_ME_ string, also adapt the sort_search_data_table function
-            self.db.char.customSearchData["REPLACE_ME_"..randomString(6)] = { type=SearchIndexType.CMD }
-            show_results(self, SEARCH_EDITBOX:GetText())
-        end)
-        -- set initiaö state
-        add_button:SetDisabled(true)
-        if self.db.char.kl['edit_mode_on'] then
-            add_button:SetDisabled(false)
-        end
-        KL_MAIN_FRAME:AddChild(add_button)
     end
-
 
     --[=====[ SEARCH TYPES CHECKBOXES --]=====]
     if self.db.char.kl['show_type_checkboxes'] then
@@ -559,6 +545,11 @@ function show_main_frame(self)
         KL_MAIN_FRAME:AddChild(heading)
     end
 
+    --[=====[ EDIT MODE TABLE HEADER --]=====]
+    if self.db.char.kl['edit_mode_on'] then
+        show_edit_header(self)
+    end
+
     --[=====[ SCROLLCONTAINER --]=====]
     SCROLLCONTAINER = AceGUI:Create("SimpleGroup")
     SCROLLCONTAINER:SetFullWidth(true)
@@ -573,6 +564,84 @@ function show_main_frame(self)
     SCROLLCONTAINER:AddChild(SCROLL)
 
     KL_MAIN_FRAME:Show()
+end
+
+function show_edit_header(self)
+    local font_size = 12
+    local height = 10
+    EDIT_HEADER = AceGUI:Create("SimpleGroup")
+    EDIT_HEADER:SetLayout("flow")
+    EDIT_HEADER:SetFullWidth(true)
+
+    local f = AceGUI:Create("Label")
+    f:SetWidth(30)
+    f:SetText('#')
+    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetHeight(height)
+    EDIT_HEADER:AddChild(f)
+
+    f = AceGUI:Create("Label")
+    f:SetWidth(30)
+    f:SetText('freq')
+    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetHeight(height)
+    EDIT_HEADER:AddChild(f)
+
+    f = AceGUI:Create("Label")
+    f:SetWidth(150)
+    f:SetText('Key')
+    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetHeight(height)
+    EDIT_HEADER:AddChild(f)
+
+    f = AceGUI:Create("Label")
+    f:SetWidth(150)
+    f:SetText('Slash Command')
+    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetHeight(height)
+    EDIT_HEADER:AddChild(f)
+
+    f = AceGUI:Create("Label")
+    f:SetWidth(130)
+    f:SetText('Tooltip Text')
+    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetHeight(height)
+    EDIT_HEADER:AddChild(f)
+
+    f = AceGUI:Create("Label")
+    f:SetWidth(130)
+    f:SetText('Tooltip ItemString')
+    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetHeight(height)
+    EDIT_HEADER:AddChild(f)
+
+    f = AceGUI:Create("Label")
+    f:SetWidth(120)
+    f:SetText('Category')
+    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetHeight(height)
+    EDIT_HEADER:AddChild(f)
+
+    -- add new line
+    f = AceGUI:Create("Button")
+    f:SetWidth(40)
+    f:SetText('+')
+    -- wanted to use .frame:Hide() but that does not work (it's still visible)
+    -- then I wanted to use :Release(), but then I get an "widget already released"
+    -- error when closing the main windo
+    f:SetCallback("OnClick", function()
+        -- if you change the REPLACE_ME_ string, also adapt the sort_search_data_table function
+        self.db.char.customSearchData["REPLACE_ME_"..randomString(6)] = { type=SearchIndexType.CMD }
+        show_results(self, SEARCH_EDITBOX:GetText())
+    end)
+    -- set initial state
+    f:SetDisabled(true)
+    if self.db.char.kl['edit_mode_on'] then
+        f:SetDisabled(false)
+    end
+    EDIT_HEADER:AddChild(f)
+
+    KL_MAIN_FRAME:AddChild(EDIT_HEADER)
 end
 
 function show_results(self, filter)
@@ -632,13 +701,15 @@ function show_results(self, filter)
                 create_edit_boxes(self, key, internal_filter, k, frame, key_data, custom_entry_exists, entry_exists)
             else
                 --[=====[ SEARCH MODE IMTERACTIVE LABEL --]=====]
-                create_interactive_label(self, key, internal_filter, k, frame, key_data)
+                create_interactive_label(self, key, internal_filter, k, frame, key_data, counter)
                 -- the first entry is always the one we want to execute per default
                 if counter == 0 then
                     select_label(self, key)
                 end
                 counter = counter + 1
             end
+
+            SCROLL:AddChild(frame)
         end
     end
     SCROLL:ResumeLayout()
@@ -646,8 +717,6 @@ function show_results(self, filter)
 end
 
 function create_edit_boxes(self, key, filter, k, frame, key_data, custom_entry_exists, entry_exists)
-    local default_width = 150
-
     -- ID
     local id_frame = AceGUI:Create("Label")
     id_frame:SetWidth(30)
@@ -661,19 +730,28 @@ function create_edit_boxes(self, key, filter, k, frame, key_data, custom_entry_e
     frame:AddChild(freq_frame)
 
     -- KEY
-    local key_frame = AceGUI:Create("EditBox")
-    key_frame:SetWidth(default_width)
-    key_frame:SetText(key)
-    key_frame:SetCallback("OnEnterPressed", function(_, _, text)
-        -- this creates a new entry alltogether, so we need all existing data for
-        self.db.char.customSearchData[text] = key_data
-        show_results(self, SEARCH_EDITBOX:GetText())
-    end)
-    frame:AddChild(key_frame)
+    if custom_entry_exists and not entry_exists then
+        local key_frame = AceGUI:Create("EditBox")
+        key_frame:SetWidth(150)
+        key_frame:SetText(key)
+        key_frame:SetCallback("OnEnterPressed", function(_, _, text)
+            -- when the primary changes, we copy over the data to the new entry and delete the old
+            local t = shallowcopy(self.db.char.customSearchData[key])
+            self.db.char.customSearchData[text] = t
+            self.db.char.customSearchData[key] = nil
+            show_results(self, SEARCH_EDITBOX:GetText())
+        end)
+        frame:AddChild(key_frame)
+    else
+        local key_frame = AceGUI:Create("Label")
+        key_frame:SetWidth(150)
+        key_frame:SetText(key)
+        frame:AddChild(key_frame)
+    end
 
     -- SLASH CMD
     local slash_cmd_frame = AceGUI:Create("EditBox")
-    slash_cmd_frame:SetWidth(default_width)
+    slash_cmd_frame:SetWidth(150)
     slash_cmd_frame:SetText(key_data.slash_cmd)
     slash_cmd_frame:SetCallback("OnEnterPressed", function(_, _, text)
         set_custom_search_data(self, key, 'slash_cmd', text)
@@ -732,34 +810,37 @@ function create_edit_boxes(self, key, filter, k, frame, key_data, custom_entry_e
         end)
         frame:AddChild(default_button)
     end
-
-    SCROLL:AddChild(frame)
 end
 
-function create_interactive_label(self, key, filter, k, frame, key_data)
+function create_interactive_label(self, key, filter, k, frame, key_data, counter)
     --[=====[ SPELL ICON --]=====]
     if self.db.char.kl['enable_spell_icons'] then
-        local g = AceGUI:Create("SecureActionButton")
-        if key_data.icon then
-            g:SetTexture(key_data.icon)
-        else
-            g:SetTexture(ICON_BASE_PATH..'transparent.blp')
+        -- we cannot generate action buttons for every entry there is, it will lead to
+        -- a signifacantely lag (~0.5s) every time the search window is opened
+        if counter < 10 then
+            local f = AceGUI:Create("SecureActionButton")
+            if key_data.icon then
+                f:SetTexture(key_data.icon)
+            else
+                f:SetTexture("Interface\\Icons\\Inv_misc_questionmark")
+            end
+            f:SetMacroText(key_data.slash_cmd)
+            f.frame:SetScript("PostClick", function()
+                increase_freq(self)
+                hide_all()
+            end)
+            frame:AddChild(f)
         end
-        g:SetMacroText(key_data.slash_cmd)
-        g.frame:SetScript("PostClick", function()
-            hide_all()
-        end)
-        frame:AddChild(g)
     end
 
     --[=====[ INTERACTIVE LABEL --]=====]
     local label = AceGUI:Create("InteractiveLabel")
     if self.db.char.kl['debug'] then
-        label:SetText(key.." ("..get_freq(self, key, filter)..") (idx: "..k..")")
+        label:SetText(key.." (freq: "..get_freq(self, key, filter)..") (idx: "..k..")")
     else
         label:SetText(key)
     end
-    if not self.db.char.kl['enable_spell_icons'] then
+    if not self.db.char.kl['enable_spell_icons'] or counter >= 10 then
         if key_data.icon then
             label:SetImage(key_data.icon)
         else
@@ -786,20 +867,19 @@ function create_interactive_label(self, key, filter, k, frame, key_data)
     end
 
     table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})
-    SCROLL:AddChild(frame)
 end
 
--- execute_macro means effectively propagate then close the main window
-function execute_macro(self)
-    if not self.db.char.kl['edit_mode_on'] then
-        KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
-
+function increase_freq(self)
         -- save freq
         local current_search = SEARCH_EDITBOX:GetText()
         if is_nil_or_empty(current_search) then
-            -- current_search = 'EMPTY'
             current_search = CURRENTLY_SELECTED_LABEL_KEY
         end
+
+        if self.db.char.kl['enable_quick_filter'] then
+            current_search = current_search:gsub('%d','')
+        end
+
         local freq = 1
         local current_search_freq = self.db.char.searchDataFreq[current_search]
         if current_search_freq then
@@ -809,7 +889,13 @@ function execute_macro(self)
             end
         end
         self.db.char.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
-        -- propagate and close
+end
+
+-- execute_macro means effectively propagate then close the main window
+function execute_macro(self)
+    if not self.db.char.kl['edit_mode_on'] then
+        KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
+        increase_freq(self)
         hide_all()
         dprint(self, "execute_macro "..CURRENTLY_SELECTED_LABEL_KEY..", "..get_mem_usage())
     end
@@ -857,26 +943,31 @@ function hide_all()
 end
 
 function print_search_data_freq(self)
-    self:Print(L["PRINT_SEARCH_DATA_FREQ"])
-    for _,v in pairs(self.db.char.searchDataFreq) do
-        self:Print(' ', el(v.freq, 8), v.key)
+    self:Print("Content of Search Frequence DB:")
+    for k,v in pairs(self.db.char.searchDataFreq) do
+        self:Print(' ', string.lpad(v.freq, 4), string.lpad(k, 16), v.key)
     end
 end
 
-function el(text, target_len)
-    text = tostring(text)
-    local rv = ''
-    repeat
-        rv = rv..' '
-    until (rv:len() + text:len()) == target_len
-    return text..rv
+function print_custom_search_db(self)
+    self:Print("Content of Custom Search DB:")
+    for k,v in pairs(self.db.char.customSearchData) do
+        self:Print(' '..k)
+        for k1,v1 in pairs(v) do
+            self:Print('  '..k1..'='..v1)
+        end
+    end
 end
 
-function print_search_data_table(self)
-    self:Print(L["PRINT_SEARCH_DATA_TABLE"])
-    local search_data_table_sorted = sort_search_data_table(self)
-    for _,v in ipairs(search_data_table_sorted) do
-        self:Print('', v[1])
+function print_search_db(self, key)
+    self:Print("Content of Search DB:")
+    for k,v in pairs(self.db.char.searchDataTable) do
+        if k == key then
+            self:Print(' '..k)
+            for k1,v1 in pairs(v) do
+                self:Print('  '..k1..'='..v1)
+            end
+        end
     end
 end
 
@@ -952,35 +1043,15 @@ end
 
 function move_selector(self, keyboard_key)
     if not self.db.char.kl['edit_mode_on'] then
-        local el_height = 22 -- height of one row
-        local will_fit = SCROLLCONTAINER.frame:GetHeight() / el_height
-        -- if 22 is the interactive label height, why do I need to add some random value to
-        -- the scroll_multi??
-        local scroll_multi = el_height+12.5
-
-        -- set initial boundaries
-        if CURR_MIN == nil then
-            CURR_MIN = 0
-        end
-        if CURR_MAX == nil then
-            CURR_MAX = will_fit
-        end
-
-        if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
-            -- scroll up if not already at top
-            if CURRENTLY_SELECTED_LABEL_INDEX > 2 and CURRENTLY_SELECTED_LABEL_INDEX < CURR_MIN + 3 then
-                CURR_MIN = CURR_MIN - 1
-                CURR_MAX = CURR_MAX - 1
-                SCROLL:SetScroll(CURR_MIN*scroll_multi)
-            end
+        if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 2 then
             select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
-        elseif keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
-            if CURRENTLY_SELECTED_LABEL_INDEX > CURR_MAX - 2 then
-                CURR_MIN = CURR_MIN + 1
-                CURR_MAX = CURR_MAX + 1
-                SCROLL:SetScroll(CURR_MIN*scroll_multi)
-            end
+        elseif keyboard_key == "DOWN" then
             select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
+        end
+
+        if CURRENTLY_SELECTED_LABEL_INDEX > 5 then
+            local scroll_step = 14 * (CURRENTLY_SELECTED_LABEL_INDEX-5)
+            SCROLL:SetScroll(scroll_step)
         end
     end
 end
@@ -1013,7 +1084,7 @@ end
 function set_search_frame_size(self)
     if self.db.char.kl['show_edit_mode_checkbox'] then
         -- make space for the edit mode check box
-        SEARCH_EDITBOX:SetWidth(KL_MAIN_FRAME_WIDTH-140)
+        SEARCH_EDITBOX:SetWidth(KL_MAIN_FRAME_WIDTH-160)
     else
         SEARCH_EDITBOX:SetFullWidth(true)
     end
@@ -1109,7 +1180,8 @@ end
 function set_custom_search_data(self, key, sub_key, value)
     -- copy over values if not exist yet
     if not self.db.char.customSearchData[key] then
-        self.db.char.customSearchData[key] = self.db.char.searchDataTable[key]
+        local t = shallowcopy(self.db.char.searchDataTable[key])
+        self.db.char.customSearchData[key] = t
     end
 
     self.db.char.customSearchData[key][sub_key] = value
@@ -1121,7 +1193,6 @@ function edit_master_marco(self, key, keyboard_key)
     if not keyboard_key then
         keyboard_key = 'ENTER'
     end
-    --local body = self.db.char.searchDataTable[key].slash_cmd
     local body = get_search_data(self, key, 'slash_cmd')
     if body then
         EditMacro(macroId, nil, nil, body, 1, 1);

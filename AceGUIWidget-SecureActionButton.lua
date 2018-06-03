@@ -21,7 +21,11 @@ local methods = {
 		self:SetWidth(24)
         self:SetTexture()
         self:SetMacroText()
-	end,
+    end,
+
+    -- ["OnRelease"] = function(self)
+    --     self.frame = nil
+    -- end,
 
     ["SetTexture"] = function(self, spell_id)
         -- http://www.wowinterface.com/forums/showpost.php?p=255359&postcount=4
@@ -31,11 +35,11 @@ local methods = {
         t:SetAllPoints(self.frame) --make texture same size as button
         self.frame:SetNormalTexture(t)
     end,
-    
+
     ["SetMacroText"] = function(self, macro_text)
         self.frame:SetAttribute("type1", "macro")
         self.frame:SetAttribute("macrotext1", macro_text)
-	end,
+    end,
 
 }
 
@@ -44,8 +48,7 @@ Constructor
 -------------------------------------------------------------------------------]]
 local function Constructor()
     local num = AceGUI:GetNextWidgetNum(Type)
-    local frame = CreateFrame("Button", "KLButton"..num, UIParent, "SecureActionButtonTemplate")
-    frame:Hide()
+    local frame = CreateFrame("Button", nil, UIParent, "SecureActionButtonTemplate")
 
 	local widget = {
 		frame = frame,
