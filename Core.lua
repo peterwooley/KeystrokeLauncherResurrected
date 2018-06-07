@@ -36,6 +36,8 @@ local CURRENTLY_SELECTED_LABEL_KEY
 local SEARCH_TABLE_TO_LABEL
 local RELOADING -- used to mark an auto reload of the gui
 
+local SCROLLED = 0
+
 -- let's go
 function KeystrokeLauncher:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherDB")
@@ -1043,16 +1045,22 @@ end
 
 function move_selector(self, keyboard_key)
     if not self.db.char.kl['edit_mode_on'] then
-        if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 2 then
+        if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
             select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
-        elseif keyboard_key == "DOWN" then
+            if SCROLLED > 0 then
+                local scroll_step = 14 * (CURRENTLY_SELECTED_LABEL_INDEX-5)
+                SCROLL:SetScroll(scroll_step)
+                SCROLLED = SCROLLED - 1
+            end
+        elseif keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
             select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
+            if CURRENTLY_SELECTED_LABEL_INDEX > 5 then
+                local scroll_step = 14 * (CURRENTLY_SELECTED_LABEL_INDEX-5)
+                SCROLL:SetScroll(scroll_step)
+                SCROLLED = SCROLLED + 1
+            end
         end
 
-        if CURRENTLY_SELECTED_LABEL_INDEX > 5 then
-            local scroll_step = 14 * (CURRENTLY_SELECTED_LABEL_INDEX-5)
-            SCROLL:SetScroll(scroll_step)
-        end
     end
 end
 
@@ -1398,7 +1406,7 @@ function fill_search_data_table(self)
     -- print out start message
     local disabled = L["INDEX_DISABLED"]
     local enabled = L["INDEX_ENABLED"]
-    self:Print(L["INDEX_HEADER"])
+    dprint(self, L["INDEX_HEADER"])
     for type, type_enabled in pairs(self.db.char.searchDataWhatIndex) do
         if type_enabled then
             enabled = enabled..type..' '
@@ -1406,15 +1414,15 @@ function fill_search_data_table(self)
             disabled = disabled..type..' '
         end
     end
-    self:Print(enabled)
-    self:Print(disabled)
+    dprint(self, enabled)
+    dprint(self, disabled)
 
     local keybindings_list = {}
     for k,_ in pairs(merge_keybindings(self)) do
         table.insert(keybindings_list, k)
     end
 
-    self:Print(L["INDEX_FOOTER"](table.concat(keybindings_list, '+')))
+    dprint(self, L["INDEX_FOOTER"](table.concat(keybindings_list, '+')))
 end
 
 function add_many(self, type, tables)

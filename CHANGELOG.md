@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.10
+
+* Changed loading message to only be shown when debug mode is on.
+* Fixed some up / down key scrolling bugs ... still now statisfied though
+
 ## v0.9.9
 
 * NEW: edit mode for the search database
