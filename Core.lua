@@ -665,7 +665,7 @@ function show_edit_header(self)
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
-    f:SetWidth(150)
+    f:SetWidth(180)
     f:SetText('Slash Command')
     f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
     EDIT_HEADER:AddChild(f)
@@ -850,7 +850,7 @@ function create_edit_boxes(self, key, idx)
 
     -- SLASH CMD
     local slash_cmd_frame = AceGUI:Create("EditBox")
-    slash_cmd_frame:SetWidth(150)
+    slash_cmd_frame:SetWidth(180)
     slash_cmd_frame:SetText(key_data.slash_cmd)
     slash_cmd_frame:SetCallback("OnEnterPressed", function(_, _, text)
         set_custom_search_data(self, key, 'slash_cmd', text)
