@@ -7,6 +7,8 @@ if L then
 L["config_print"] = "Anzeigen"
 L["config_keybinding"] = "Tastenbelegung"
 L["OPEN"] = "Öffnen"
+L["CLEAR"] = "Zurücksetzen"
+L["PRINT"] = "Anzeigen"
 
 -- individual
 L["config_hide_name"] = "Verstecke"
@@ -32,11 +34,8 @@ L["config_search_table_index"] = "Auswählen zum aktivieren"
 
 L["config_search_freq_table_name"] = "Häufigkeitsindex"
 L["config_search_freq_table_desc"] = "Der Häufigkeitsindex merkt sich wie oft du was ausgeführt hast."
-L["config_search_freq_table_clear_name"] = "Clear"
-L["config_search_freq_table_clear_desc"] = "Setze den Häufigkeitsindex zurück"
 L["config_search_freq_table_cleared"] = "Häufigkeitsindex zurückgesetzt"
 L['CONFIG_SEARCH_TABLE_CUSTOM_HEADER'] = "Eigene Suchdaten"
-L['CONFIG_SEARCH_TABLE_CUSTOM_CLEAR'] = "Zurücksetzen"
 
 L['CONFIG_INDEX_TYPES_ADDON'] = 'Addons'
 L['CONFIG_INDEX_TYPES_MACRO'] = 'Makros'
@@ -66,9 +65,15 @@ Anmerkung 1: funktioniert nur wenn die Suchtyp Checkboxen auch aktiviert sind.
 Anmerkung 2: weil Zahlen dann als spezielle Kontroll-Charaktere behandelt werden, kannst du sie nicht mehr als Filter verwenden.]]
 L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'] = 'Edit Modus'
 L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'] = 'Zeigt / versteckt die Checkbox die den Edit Modus an / aus schaltet.'
+L['CONFIG_LOOK_N_FEEL_TOP_MACROS_NAME'] = 'Schreibe Top Makros'
+L['CONFIG_LOOK_N_FEEL_TOP_MACROS_DESC'] = [[Wenn an, werden die 5 meist ausgeführten Befehle in Charakter spezifischen Makros mit dem Namen `kl-top-n` gespeichert (n ist 1 bis 5). Die Makros werden erzeugt wenn sie nicht existieren.
+
+Für informativere Tooltips, installire das Custom Tooltips Addon (https://www.curseforge.com/wow/addons/custom-tooltips).]]
 L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_NAME'] = 'Benutze klickbare Icons'
 L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_DESC'] = 'Wenn an, kannst du auf die Icons klicken um den Eintrag auszuführen. Deaktiviere es für kleinere Icons.'
-
+L['CONFIG_LOOK_N_FEEL_MAX_ITEMS_NAME'] = "Maximale Ergebnisse / Seite"
+L['CONFIG_LOOK_N_FEEL_MAX_ITEMS_DESC'] = "Kontrolliert die Anzahl an Ergebniszeilen. Default: 7."
+L['CONFIG_LOOK_N_FEEL_SIZE'] = "Einstellungen der UI Größe"
 
 --[=====[ CODE --]=====]
 L["INDEX_HEADER"] = "Suchdatenbank erfolgreich aktualisiert."

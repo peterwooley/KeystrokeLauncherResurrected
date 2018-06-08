@@ -21,7 +21,8 @@ To change the keybinding go into the configuration menu: `ctrl+alt` --> type in 
 
 **Tipps:**
 
-* Use the *Up/ Down* keys to select a different item. Or use the mouse abd clicking on it.
+* Use the *Up / Down* keys to select a different item. Or use the mouse abd clicking on it.
+* Use the "Left / Right* keys to jump between the pages. Or click the buttons.
 * Search database is refreshed once at login time. Can also manually be refreshed using the button in the configuration ui.
 
 **How To:**
@@ -46,8 +47,5 @@ To change the keybinding go into the configuration menu: `ctrl+alt` --> type in 
 ## Gotchas& Known Issues
 
 * Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with a diffent slash commands. See [here](docs/edit.md) how to edit the search database.
-* The way the up/down keys work is very basic, it does not handle resizing, manual scrolling using the mouse wheel, etc.
-* Creating clickable icons for every item leads to lag when opening up the main window. Therefore it is currently limited to the first 10 items.
-* I think there is a memory leak somehwere, at least the memory consumption rises everytime you open/ close the main window.
 
 ## Let me know if you find any bugs or have a feature request :)

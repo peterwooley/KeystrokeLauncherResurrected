@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0
+
+* Replaced freely resizable and scrollable window with fixed size paginated window. Handling up/down keyboard calls for moving the cursor, turned out to be too complicated. Use right / left keys to jump between pages.
+
 ## v0.9.10
 
 * Changed loading message to only be shown when debug mode is on.

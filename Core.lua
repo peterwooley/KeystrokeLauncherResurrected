@@ -20,7 +20,7 @@ local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
 -- module global vars
 -- frames
 local KL_MAIN_FRAME
-local SCROLL
+local ITEMS_GROUP
 local SCROLLCONTAINER
 local SEARCH_TYPE_CHECKBOXES
 local SEARCH_EDITBOX
@@ -29,14 +29,15 @@ local EDIT_HEADER
 
 -- other
 local KL_MAIN_FRAME_WIDTH
-local KL_MAIN_FRAME_HEIGHT
 local SEARCH_TABLE_INIT_DONE
 local CURRENTLY_SELECTED_LABEL_INDEX
 local CURRENTLY_SELECTED_LABEL_KEY
 local SEARCH_TABLE_TO_LABEL
 local RELOADING -- used to mark an auto reload of the gui
 
-local SCROLLED = 0
+local PAGINATION = 1 -- stores the current visible page
+local MAX_PAGES = 2 -- stores the max amount if pages, depends on the amount of results
+local ONE_ITEM_HEIGHT -- after show_result is run, this contains the height of one item
 
 -- let's go
 function KeystrokeLauncher:OnInitialize()
@@ -81,6 +82,9 @@ function KeystrokeLauncher:OnInitialize()
         self.db.char.kl['edit_mode_on'] = false
         self.db.char.kl['enable_top_macros'] = false
         self.db.char.kl['enable_spell_icons'] = false
+    end
+    if self.db.char.kl['items_per_page'] == nil then
+        self.db.char.kl['items_per_page'] = 7
     end
 
     --[=====[ FILL SEARCH DATA TABLE --]=====]
@@ -184,14 +188,33 @@ function KeystrokeLauncher:OnInitialize()
                         set = function(_, val) self.db.char.kl['enable_spell_icons'] = val end,
                         get = function() return self.db.char.kl['enable_spell_icons'] end
                     },
+                    -- sizes
+                    header_sizes = {
+                        order = 7,
+                        name = L['CONFIG_LOOK_N_FEEL_SIZE'],
+                        type = "header"
+                    },
+                    max_items_per_page = {
+                        order = 8,
+                        name = L['CONFIG_LOOK_N_FEEL_MAX_ITEMS_NAME'],
+                        desc = L['CONFIG_LOOK_N_FEEL_MAX_ITEMS_DESC'],
+                        type = "range",
+                        min = 1,
+                        max = 99,
+                        softMin = 7,
+                        softMax = 14,
+                        step = 1,
+                        set = function(_, val) self.db.char.kl['items_per_page'] = val end,
+                        get = function() return self.db.char.kl['items_per_page'] end
+                    },
                     -- experimental look n feel switches
                     header_experimental = {
-                        order = 8,
+                        order = 18,
                         name = L['CONFIG_LOOK_N_FEEL_HEADER_EXPERIMENTAL'],
                         type = "header"
                     },
                     enable_quick_filter = {
-                        order = 9,
+                        order = 19,
                         name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'],
                         type = "toggle",
                         set = function(_, val)
@@ -204,19 +227,19 @@ function KeystrokeLauncher:OnInitialize()
                         get = function() return self.db.char.kl['enable_quick_filter'] end
                     },
                     desc_type_marker = {
-                        order = 10,
+                        order = 30,
                         name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_DESC'],
                         type = "description"
                     },
                     show_top_macros = {
-                        order = 11,
+                        order = 31,
                         name = L['CONFIG_LOOK_N_FEEL_TOP_MACROS_NAME'],
                         type = "toggle",
                         set = function(_, val) self.db.char.kl['enable_top_macros'] = val end,
                         get = function() return self.db.char.kl['enable_top_macros'] end
                     },
                     desc_top_macros = {
-                        order = 12,
+                        order = 32,
                         name = L['CONFIG_LOOK_N_FEEL_TOP_MACROS_DESC'],
                         type = "description"
                     }
@@ -298,11 +321,16 @@ function KeystrokeLauncher:OnInitialize()
                     },
                     clear_custom_data = {
                         order = 8,
-                        name = L['CONFIG_SEARCH_TABLE_CUSTOM_CLEAR'],
+                        name = L['CLEAR'],
                         type = "execute",
                         func = function() self.db.char.customSearchData = {} end
                     },
-
+                    print_custom_data = {
+                        order = 9,
+                        name = L["PRINT"],
+                        type = "execute",
+                        func = function() print_custom_search_db(self) end
+                    }
                 }
             },
             --[=====[ SEARCH FREQUENCY TABLE --]=====]
@@ -317,8 +345,7 @@ function KeystrokeLauncher:OnInitialize()
                         type = "header"
                     },
                     clear = {
-                        name = L["config_search_freq_table_clear_name"],
-                        desc= L["config_search_freq_table_clear_desc"],
+                        name = L["CLEAR"],
                         type = "execute",
                         func = function()
                             self.db.char.searchDataFreq = {}
@@ -326,7 +353,7 @@ function KeystrokeLauncher:OnInitialize()
                         end
                     },
                     print = {
-                        name = L["config_print"],
+                        name = L["PRINT"],
                         type = "execute",
                         func = function() print_search_data_freq(self) end
                     }
@@ -397,16 +424,18 @@ end
 -- programmatically re-render the main frame
 function reload_main_frame(self)
     RELOADING = true
+    local curr_filter = SEARCH_EDITBOX:GetText()
     hide_all()
     RELOADING = false
-    start(self)
+    start(self, curr_filter)
 end
 
 -- window start up logic
-function start(self)
+function start(self, filter)
     set_main_frame_size(self)
     show_main_frame(self)
-    show_results(self)
+    SEARCH_EDITBOX:SetText(filter)
+    show_results(self, filter)
 end
 
 function check_key_bindings(self, keyboard_key)
@@ -450,9 +479,11 @@ function dprint(...)
 end
 
 function show_main_frame(self)
+    heights = 0
     --[=====[ KL_MAIN_FRAME --]=====]
     KL_MAIN_FRAME = AceGUI:Create("Frame")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
+    KL_MAIN_FRAME:EnableResize(false)
     KL_MAIN_FRAME:SetCallback("OnClose", function(widget)
         if not RELOADING then
             -- do not clear keybinding if we are just regenerating the ui
@@ -463,14 +494,11 @@ function show_main_frame(self)
         AceGUI:Release(widget)
         update_top_macros(self)
         if self.db.char.kl['debug'] then
-            -- print_search_data_freq(self)
-            -- print_custom_search_db(self)
             self:Print(get_mem_usage())
         end
     end)
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(KL_MAIN_FRAME_WIDTH)
-    KL_MAIN_FRAME:SetHeight(KL_MAIN_FRAME_HEIGHT)
     KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(false)
     KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
         SEARCH_EDITBOX:SetFocus()
@@ -478,6 +506,10 @@ function show_main_frame(self)
             execute_macro(self)
         elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
             move_selector(self, keyboard_key)
+        elseif keyboard_key == 'RIGHT' then
+            NEXT_BUTTON.frame:Click()
+        elseif keyboard_key == 'LEFT' then
+            PREV_BUTTON.frame:Click()
         end
     end)
 
@@ -488,8 +520,12 @@ function show_main_frame(self)
     SEARCH_EDITBOX:DisableButton(true)
     SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
     SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function() hide_all() end)
-    SEARCH_EDITBOX:SetCallback("OnTextChanged", function(_, _, value) show_results(self, value) end)
+    SEARCH_EDITBOX:SetCallback("OnTextChanged", function(_, _, value)
+        PAGINATION = 1
+        show_results(self, value)
+    end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
+    heights = heights + SEARCH_EDITBOX.frame:GetHeight()
 
     --[=====[ EDIT MODE CHECKBOX AND ADD NEW --]=====]
     if self.db.char.kl['show_edit_mode_checkbox'] then
@@ -502,6 +538,7 @@ function show_main_frame(self)
             reload_main_frame(self)
         end)
         KL_MAIN_FRAME:AddChild(edit_mode_checkbox)
+        heights = heights + edit_mode_checkbox.frame:GetHeight()
     end
 
     --[=====[ SEARCH TYPES CHECKBOXES --]=====]
@@ -538,6 +575,7 @@ function show_main_frame(self)
             end
         end
         KL_MAIN_FRAME:AddChild(search_type_group)
+        heights = heights + search_type_group.frame:GetHeight()
     end
 
     --[=====[ SEPERATOR --]=====]
@@ -545,26 +583,59 @@ function show_main_frame(self)
         local heading = AceGUI:Create("Heading")
         heading:SetFullWidth(true)
         KL_MAIN_FRAME:AddChild(heading)
+        heights = heights + heading.frame:GetHeight()
     end
 
     --[=====[ EDIT MODE TABLE HEADER --]=====]
     if self.db.char.kl['edit_mode_on'] then
         show_edit_header(self)
+        heights = heights + EDIT_HEADER.frame:GetHeight()
     end
 
-    --[=====[ SCROLLCONTAINER --]=====]
-    SCROLLCONTAINER = AceGUI:Create("SimpleGroup")
-    SCROLLCONTAINER:SetFullWidth(true)
-    SCROLLCONTAINER:SetFullHeight(true)
-    SCROLLCONTAINER:SetLayout("Fill")
-    SCROLLCONTAINER.frame:SetPropagateKeyboardInput(true)
-    KL_MAIN_FRAME:AddChild(SCROLLCONTAINER)
+    --[=====[ PAGINATION --]=====]
+    local pagination_group = AceGUI:Create("SimpleGroup")
+    pagination_group:SetFullWidth(true)
+    pagination_group:SetLayout("Flow")
 
-    --[=====[ SCROLL --]=====]
-    SCROLL = AceGUI:Create("ScrollFrame")
-    SCROLL:SetLayout("Flow")
-    SCROLLCONTAINER:AddChild(SCROLL)
+    -- PREVIOUS
+    PREV_BUTTON = AceGUI:Create("Button")
+    PREV_BUTTON:SetWidth(40)
+    PREV_BUTTON:SetText("<")
+    PREV_BUTTON:SetCallback("OnClick", function()
+        if PAGINATION > 1 then
+            PAGINATION = PAGINATION - 1
+            show_results(self, SEARCH_EDITBOX:GetText())
+        end
+    end)
+    pagination_group:AddChild(PREV_BUTTON)
 
+    -- LABEL
+    PAGINATION_LABEL = AceGUI:Create("Label")
+    PAGINATION_LABEL:SetWidth(KL_MAIN_FRAME_WIDTH - 120)
+    PAGINATION_LABEL.label:SetJustifyH("CENTER")
+    pagination_group:AddChild(PAGINATION_LABEL)
+
+    -- NEXT
+    NEXT_BUTTON = AceGUI:Create("Button")
+    NEXT_BUTTON:SetWidth(40)
+    NEXT_BUTTON:SetText(">")
+    NEXT_BUTTON:SetCallback("OnClick", function()
+        if PAGINATION < MAX_PAGES then
+            PAGINATION = PAGINATION + 1
+            show_results(self, SEARCH_EDITBOX:GetText())
+        end
+    end)
+    pagination_group:AddChild(NEXT_BUTTON)
+
+    KL_MAIN_FRAME:AddChild(pagination_group)
+    heights = heights + pagination_group.frame:GetHeight()
+
+    --[=====[ CONTAINER FOR LABELS --]=====]
+    ITEMS_GROUP = AceGUI:Create("SimpleGroup")
+    ITEMS_GROUP:SetFullWidth(true)
+    ITEMS_GROUP.frame:SetPropagateKeyboardInput(true)
+
+    KL_MAIN_FRAME:AddChild(ITEMS_GROUP)
     KL_MAIN_FRAME:Show()
 end
 
@@ -579,49 +650,42 @@ function show_edit_header(self)
     f:SetWidth(30)
     f:SetText('#')
     f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
-    f:SetHeight(height)
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(30)
     f:SetText('freq')
     f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
-    f:SetHeight(height)
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(150)
     f:SetText('Key')
     f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
-    f:SetHeight(height)
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(150)
     f:SetText('Slash Command')
     f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
-    f:SetHeight(height)
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(130)
     f:SetText('Tooltip Text')
     f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
-    f:SetHeight(height)
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(130)
     f:SetText('Tooltip ItemString')
     f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
-    f:SetHeight(height)
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(120)
     f:SetText('Category')
     f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
-    f:SetHeight(height)
     EDIT_HEADER:AddChild(f)
 
     -- add new line
@@ -651,14 +715,59 @@ function show_results(self, filter)
         filter = '' -- :find cant handle nil
     end
     SEARCH_TABLE_TO_LABEL = {}
-    SCROLL:ReleaseChildren() -- clear all and start from fresh
+    ITEMS_GROUP:ReleaseChildren() -- clear all and start from fresh
 
-    -- sort data by combinng two tables
+    -- sort
     local search_data_table_sorted = sort_search_data_table(self, filter)
 
-    local counter = 0
-    SCROLL:PauseLayout() -- else opening the page takes a few seconds longer
-    for k,v in ipairs(search_data_table_sorted) do
+    -- filter
+    local filtered_table = filter_sorted_table(self, search_data_table_sorted, filter)
+
+    -- display
+    KL_MAIN_FRAME:PauseLayout()
+    FROM = PAGINATION * self.db.char.kl['items_per_page'] - (self.db.char.kl['items_per_page'] - 1)
+    TO = PAGINATION * self.db.char.kl['items_per_page']
+    local counter = 1
+    for idx,v in ipairs(filtered_table) do
+        if idx >= FROM and idx <= TO then
+            if self.db.char.kl['edit_mode_on'] then
+                --[=====[ EDIT MODE BOXES --]=====]
+                create_edit_boxes(self, v[1], idx)
+            else
+                --[=====[ SEARCH MODE IMTERACTIVE LABEL --]=====]
+                create_interactive_label(self, idx, v[1], internal_filter)
+                -- the first entry is always the one we want to execute per default
+                if counter == 1 then
+                    select_label(self, v[1])
+                end
+            end
+            counter = counter + 1
+        end
+    end
+
+    MAX_PAGES = math.floor(#filtered_table / self.db.char.kl['items_per_page'])
+    local label_text = ''
+    for i=1, MAX_PAGES do
+        if i == PAGINATION then
+            label_text = label_text.."  >"..i..'<'
+        else
+            label_text = label_text.."  "..i
+        end
+    end
+
+    PAGINATION_LABEL:SetText(label_text)
+    KL_MAIN_FRAME:ResumeLayout()
+    KL_MAIN_FRAME:DoLayout()
+
+    -- set height into main frame
+    local total_item_height = ONE_ITEM_HEIGHT * self.db.char.kl['items_per_page']
+    -- 65 is the rest of the frames borders, statusbar, etc
+    KL_MAIN_FRAME:SetHeight(total_item_height + heights + 65)
+end
+
+function filter_sorted_table(self, sorted_table, filter)
+    local filtered_table = {}
+    for k,v in ipairs(sorted_table) do
         local internal_filter = filter -- so that the filter does not change for following loops runs
         local key = v[1]
         local key_data, custom_entry_exists, entry_exists = get_search_data(self, key)
@@ -694,41 +803,29 @@ function show_results(self, filter)
 
         -- 3. filter condition: must match filter string
         if correct_type and key:lower():find(internal_filter) then
-            local frame = AceGUI:Create("SimpleGroup")
-            frame:SetLayout("flow")
-            frame:SetFullWidth(true)
-
-            if self.db.char.kl['edit_mode_on'] then
-                --[=====[ EDIT MODE BOXES --]=====]
-                create_edit_boxes(self, key, internal_filter, k, frame, key_data, custom_entry_exists, entry_exists)
-            else
-                --[=====[ SEARCH MODE IMTERACTIVE LABEL --]=====]
-                create_interactive_label(self, key, internal_filter, k, frame, key_data, counter)
-                -- the first entry is always the one we want to execute per default
-                if counter == 0 then
-                    select_label(self, key)
-                end
-                counter = counter + 1
-            end
-
-            SCROLL:AddChild(frame)
+            table.insert(filtered_table, v)
         end
     end
-    SCROLL:ResumeLayout()
-    SCROLL:DoLayout()
+    return filtered_table
 end
 
-function create_edit_boxes(self, key, filter, k, frame, key_data, custom_entry_exists, entry_exists)
+function create_edit_boxes(self, key, idx)
+    local key_data, custom_entry_exists, entry_exists = get_search_data(self, key)
+
+    local frame = AceGUI:Create("SimpleGroup")
+    frame:SetLayout("flow")
+    frame:SetFullWidth(true)
+
     -- ID
     local id_frame = AceGUI:Create("Label")
     id_frame:SetWidth(30)
-    id_frame:SetText(k)
+    id_frame:SetText(idx)
     frame:AddChild(id_frame)
 
     -- FREQUENCY
     local freq_frame = AceGUI:Create("Label")
     freq_frame:SetWidth(30)
-    freq_frame:SetText(get_freq(self, key, filter))
+    freq_frame:SetText(get_freq(self, key))
     frame:AddChild(freq_frame)
 
     -- KEY
@@ -812,37 +909,42 @@ function create_edit_boxes(self, key, filter, k, frame, key_data, custom_entry_e
         end)
         frame:AddChild(default_button)
     end
+
+    ITEMS_GROUP:AddChild(frame)
+    ONE_ITEM_HEIGHT = frame.frame:GetHeight()
 end
 
-function create_interactive_label(self, key, filter, k, frame, key_data, counter)
+function create_interactive_label(self, idx, key, filter)
+    local key_data = get_search_data(self, key)
+
+    local frame = AceGUI:Create("SimpleGroup")
+    frame:SetLayout("flow")
+    frame:SetFullWidth(true)
+
     --[=====[ SPELL ICON --]=====]
     if self.db.char.kl['enable_spell_icons'] then
-        -- we cannot generate action buttons for every entry there is, it will lead to
-        -- a signifacantely lag (~0.5s) every time the search window is opened
-        if counter < 10 then
-            local f = AceGUI:Create("SecureActionButton")
-            if key_data.icon then
-                f:SetTexture(key_data.icon)
-            else
-                f:SetTexture("Interface\\Icons\\Inv_misc_questionmark")
-            end
-            f:SetMacroText(key_data.slash_cmd)
-            f.frame:SetScript("PostClick", function()
-                increase_freq(self)
-                hide_all()
-            end)
-            frame:AddChild(f)
+        local f = AceGUI:Create("SecureActionButton")
+        if key_data.icon then
+            f:SetTexture(key_data.icon)
+        else
+            f:SetTexture("Interface\\Icons\\Inv_misc_questionmark")
         end
+        f:SetMacroText(key_data.slash_cmd)
+        f.frame:SetScript("PostClick", function()
+            increase_freq(self)
+            hide_all()
+        end)
+        frame:AddChild(f)
     end
 
     --[=====[ INTERACTIVE LABEL --]=====]
     local label = AceGUI:Create("InteractiveLabel")
     if self.db.char.kl['debug'] then
-        label:SetText(key.." (freq: "..get_freq(self, key, filter)..") (idx: "..k..")")
+        label:SetText(key.." (freq: "..get_freq(self, key, filter)..") (idx: "..idx..")")
     else
         label:SetText(key)
     end
-    if not self.db.char.kl['enable_spell_icons'] or counter >= 10 then
+    if not self.db.char.kl['enable_spell_icons'] then
         if key_data.icon then
             label:SetImage(key_data.icon)
         else
@@ -850,7 +952,6 @@ function create_interactive_label(self, key, filter, k, frame, key_data, counter
         end
     end
     label:SetWidth(KL_MAIN_FRAME_WIDTH-90)
-    label:SetHeight(15)
     label:SetFont(GameFontNormal:GetFont(), 13)
     label:SetCallback("OnClick", function()
         -- cant propagate mouse clicks, so need to press enter after selecting
@@ -864,11 +965,13 @@ function create_interactive_label(self, key, filter, k, frame, key_data, counter
         icon:SetImage(get_icon_for_index_type(key_data.type))
         icon:SetImageSize(10, 10)
         icon:SetWidth(10)
-        icon:SetHeight(10)
         frame:AddChild(icon)
     end
 
-    table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label})
+    -- table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label, idx=idx})
+    SEARCH_TABLE_TO_LABEL[idx] = {key=key, label=label}
+    ITEMS_GROUP:AddChild(frame)
+    ONE_ITEM_HEIGHT = frame.frame:GetHeight()
 end
 
 function increase_freq(self)
@@ -1045,22 +1148,11 @@ end
 
 function move_selector(self, keyboard_key)
     if not self.db.char.kl['edit_mode_on'] then
-        if keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > 1 then
-            select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
-            if SCROLLED > 0 then
-                local scroll_step = 14 * (CURRENTLY_SELECTED_LABEL_INDEX-5)
-                SCROLL:SetScroll(scroll_step)
-                SCROLLED = SCROLLED - 1
-            end
-        elseif keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < #SEARCH_TABLE_TO_LABEL then
+        if keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < TO then
             select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
-            if CURRENTLY_SELECTED_LABEL_INDEX > 5 then
-                local scroll_step = 14 * (CURRENTLY_SELECTED_LABEL_INDEX-5)
-                SCROLL:SetScroll(scroll_step)
-                SCROLLED = SCROLLED + 1
-            end
+        elseif keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > FROM then
+            select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX-1)
         end
-
     end
 end
 
@@ -1116,21 +1208,15 @@ function set_main_frame_size(self)
     end
 
     if self.db.char.kl['edit_mode_on'] then
-        -- fixed size
-        KL_MAIN_FRAME_HEIGHT = 400
         KL_MAIN_FRAME_WIDTH = one_item_width * 5
     elseif self.db.char.kl['show_type_checkboxes'] then
-        KL_MAIN_FRAME_HEIGHT = 400
-        -- different widht depending on
         KL_MAIN_FRAME_WIDTH = one_item_width * cols
     else
         KL_MAIN_FRAME_WIDTH = 380
-        KL_MAIN_FRAME_HEIGHT = 350
     end
 
     if KL_MAIN_FRAME then
         KL_MAIN_FRAME:SetWidth(KL_MAIN_FRAME_WIDTH)
-        KL_MAIN_FRAME:SetHeight(KL_MAIN_FRAME_HEIGHT)
         set_search_frame_size(self)
         GameTooltip:Hide()
     end

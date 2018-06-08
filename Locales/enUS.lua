@@ -7,6 +7,8 @@ if L then
 L["config_print"] = "print"
 L["config_keybinding"] = "Keybinding"
 L["OPEN"] = "Open"
+L["CLEAR"] = "Clear"
+L["PRINT"] = "Print"
 
 -- individual
 L["config_hide_name"] = "Hide"
@@ -32,11 +34,8 @@ L["config_search_table_index"] = "Select to enable"
 
 L["config_search_freq_table_name"] = "Search Frequency Index"
 L["config_search_freq_table_desc"] = "The search frequency index stores how often you executed what."
-L["config_search_freq_table_clear_name"] = "Clear"
-L["config_search_freq_table_clear_desc"] = "Empty the search frequency index table"
 L["config_search_freq_table_cleared"] = "Search frequency index cleared"
 L['CONFIG_SEARCH_TABLE_CUSTOM_HEADER'] = "Custom Search Data"
-L['CONFIG_SEARCH_TABLE_CUSTOM_CLEAR'] = "Clear Data"
 
 L['CONFIG_INDEX_TYPES_ADDON'] = 'Addons'
 L['CONFIG_INDEX_TYPES_MACRO'] = 'Macros'
@@ -72,6 +71,9 @@ L['CONFIG_LOOK_N_FEEL_TOP_MACROS_DESC'] = [[If enabled, the top 5 most executed 
 To see more informative macro tooltips, please install the Custom Tooltips addon (https://www.curseforge.com/wow/addons/custom-tooltips).]]
 L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_NAME'] = 'Use Clickable Item Icons'
 L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_DESC'] = 'If enabled, you can execute the item by clicking on the icon. Disable to have smaller icons.'
+L['CONFIG_LOOK_N_FEEL_MAX_ITEMS_NAME'] = "Max Items per Page"
+L['CONFIG_LOOK_N_FEEL_MAX_ITEMS_DESC'] = "Controls how many lines the result window has. Default: 7."
+L['CONFIG_LOOK_N_FEEL_SIZE'] = "UI Size Settings"
 
 --[=====[ CODE --]=====]
 L["INDEX_HEADER"] = "Search index refreshed."
