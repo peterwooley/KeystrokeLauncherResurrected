@@ -760,7 +760,7 @@ function show_results(self, filter)
     KL_MAIN_FRAME:DoLayout()
 
     -- set height into main frame
-    local total_item_height = ONE_ITEM_HEIGHT * self.db.char.kl['items_per_page']
+    local total_item_height = (ONE_ITEM_HEIGHT * self.db.char.kl['items_per_page']) + ONE_ITEM_HEIGHT
     -- 65 is the rest of the frames borders, statusbar, etc
     KL_MAIN_FRAME:SetHeight(total_item_height + heights + 65)
 end
@@ -1445,14 +1445,16 @@ function fill_search_data_table(self)
     --[=====[ MOUNTS --]=====]
     if self.db.char.searchDataWhatIndex[SearchIndexType.MOUNT] then
         for i=1, C_MountJournal.GetNumDisplayedMounts() do
-            local creatureName, spellID, icon = C_MountJournal.GetDisplayedMountInfo(i)
+            local creatureName, spellID, icon, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetDisplayedMountInfo(i)
             local spellString, spellname = item_link_to_string(GetSpellLink(spellID))
-            db_search[creatureName] = {
-                slash_cmd="/cast "..spellname,
-                icon = icon,
-                tooltipItemString=spellString,
-                type = SearchIndexType.MOUNT
-            }
+            if isCollected then
+                db_search[creatureName] = {
+                    slash_cmd="/cast "..spellname,
+                    icon = icon,
+                    tooltipItemString=spellString,
+                    type = SearchIndexType.MOUNT
+                }
+            end
         end
     end
 
