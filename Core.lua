@@ -760,9 +760,17 @@ function show_results(self, filter)
     KL_MAIN_FRAME:DoLayout()
 
     -- set height into main frame
-    local total_item_height = (ONE_ITEM_HEIGHT * self.db.char.kl['items_per_page']) + ONE_ITEM_HEIGHT
+    local total_item_height = ONE_ITEM_HEIGHT * self.db.char.kl['items_per_page']
+    local decoration_height = 65
+
+    --- BFA: no clue why size has to be higher
+    local _, _, _, tocversion = GetBuildInfo()
+    if tocversion == 80000 then
+        decoration_height = 80
+    end
+
     -- 65 is the rest of the frames borders, statusbar, etc
-    KL_MAIN_FRAME:SetHeight(total_item_height + heights + 65)
+    KL_MAIN_FRAME:SetHeight(total_item_height + heights + decoration_height)
 end
 
 function filter_sorted_table(self, sorted_table, filter)
