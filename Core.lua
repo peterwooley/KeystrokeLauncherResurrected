@@ -968,7 +968,6 @@ function create_interactive_label(self, idx, key, filter)
         frame:AddChild(icon)
     end
 
-    -- table.insert(SEARCH_TABLE_TO_LABEL, {key=key, label=label, idx=idx})
     SEARCH_TABLE_TO_LABEL[idx] = {key=key, label=label}
     ITEMS_GROUP:AddChild(frame)
     ONE_ITEM_HEIGHT = frame.frame:GetHeight()
@@ -1412,7 +1411,9 @@ function fill_search_data_table(self)
         {'/kl search_freq print', '/kl search_freq print', L["DB_SEARCH_KL_FREQ_PRINT"]},
         {'/kl search_table rebuild', '/kl search_table rebuild', L["DB_SEARCH_KL_SEARCH_REBUILD"]},
         {'Dismount', '/dismount', L["DB_SEARCH_DISMOUNT"]},
-        {L['SUMMON_RANDOM_FAVORITE_MOUNT'], '/run C_MountJournal.SummonByID(0)'}
+        {L['SUMMON_RANDOM_FAVORITE_MOUNT'], '/run C_MountJournal.SummonByID(0)'},
+        {'Quit WoW', '/quit'},
+        {'Force Quit WoW', '/forecequit'}
     })
 
 

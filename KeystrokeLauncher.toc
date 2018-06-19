@@ -1,4 +1,4 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: Keystroke Launcher
 ## Notes: A simple keystroke launcher for macros, spells, addons and items.
 ## Author: endymonium@gmail.com

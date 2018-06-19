@@ -1,0 +1,52 @@
+-- if self.db.char.eventLog == nil then
+--     self.db.char.eventLog = {}
+-- end
+
+-- local frame = CreateFrame("FRAME")
+-- frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+-- frame:SetScript("OnEvent", function(_, event, ...)
+--     local timestamp, type, hideCaster, sourceGUID, sourceName, sourceFlags,
+--         sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags = ...
+--         -- print(event)
+--     -- if (event == "COMBAT_LOG_EVENT_UNFILTERED") then
+--     --     local spellId, spellName, spellSchool, amount, overkill, school,
+--     --         resisted, blocked, absorbed, critical, glancing, crushing = select(12, ...)
+--     --         print(timestamp, type, spellName, sourceName, destName, amount)
+--     --         -- if type == "SPELL_CAST_SUCCESS" then
+--     --         --     print(spellName)
+--     --         -- end
+--     -- end
+--     -- if
+--     if type == "SPELL_CAST_SUCCESS" then
+--         local spellId, spellName, spellSchool, amount, overkill, school,
+--             resisted, blocked, absorbed, critical, glancing, crushing = select(12, ...)
+--         if sourceName == UnitName("player") then
+--             local zoneName = GetZoneText()
+--             local instanceName = GetInstanceInfo()
+
+
+--             table.insert(self.db.char.eventLog, {
+--                 sourceName = sourceName,
+--                 destName = destName,
+--                 spellName = spellName,
+--                 timestamp = timestamp,
+--                 zoneName = zoneName,
+--                 instanceName = instanceName
+--             })
+--         end
+--     end
+-- end)
+
+-- function statistics(keyboard_key)
+--     for i=0, 120 do
+--         if IsCurrentAction(i) then
+--             print("ja")
+--             local actionType, id, subType = GetActionInfo(i)
+--             if id then
+--                local name, rank, icon, castTime, minRange, maxRange = GetSpellInfo(id)
+--                print(actionType, id, subType, name)
+--             end
+--         end
+--      end
+
+-- end
