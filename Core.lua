@@ -1346,13 +1346,15 @@ function fill_search_data_table(self)
                 else
                     -- no slash command exists, let's see if we can find something in _G['SLASH_...']
                     for k, v in pairs(_G) do
-                        if k:find('SLASH_') then
-                            if k:lower():find(name:lower()) then
-                                db_search[name] = {
-                                    slash_cmd=v,
-                                    tooltipText=name.."\n"..title.."\n"..notes,
-                                    type=SearchIndexType.ADDON
-                                }
+                        if type(k) == "string" then
+                            if k:find('SLASH_') then
+                                if k:lower():find(name:lower()) then
+                                    db_search[name] = {
+                                        slash_cmd=v,
+                                        tooltipText=name.."\n"..title.."\n"..notes,
+                                        type=SearchIndexType.ADDON
+                                    }
+                                end
                             end
                         end
                     end
