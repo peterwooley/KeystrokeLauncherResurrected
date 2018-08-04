@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2
+
+* fixes small type check bug
+
 ## v1.1
 
 * Now compatible with Battle for Azeroth
