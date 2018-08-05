@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3
+
+* added cooldowns for spells and items
+
 ## v1.2
 
 * fixes small type check bug

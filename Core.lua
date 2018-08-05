@@ -932,11 +932,7 @@ function create_interactive_label(self, idx, key, filter)
     --[=====[ SPELL ICON --]=====]
     if self.db.char.kl['enable_spell_icons'] then
         local f = AceGUI:Create("SecureActionButton")
-        if key_data.icon then
-            f:SetTexture(key_data.icon)
-        else
-            f:SetTexture("Interface\\Icons\\Inv_misc_questionmark")
-        end
+        f:SetTexture(key_data)
         f:SetMacroText(key_data.slash_cmd)
         f.frame:SetScript("PostClick", function()
             increase_freq(self)
@@ -1405,7 +1401,8 @@ function fill_search_data_table(self)
                         slash_cmd="/cast "..spellName,
                         icon = GetSpellTexture(spellName),
                         tooltipItemString=spellString,
-                        type=SearchIndexType.SPELL
+                        type=SearchIndexType.SPELL,
+                        spell_name=spellName
                     }
                 end
             end
@@ -1438,13 +1435,14 @@ function fill_search_data_table(self)
             for bagSlots=1, GetContainerNumSlots(bag) do
                 local itemLink = GetContainerItemLink(bag, bagSlots)
                 if itemLink then
-                    local itemString, itemName = item_link_to_string(itemLink)
+                    local itemString, itemName, itemId = item_link_to_string(itemLink)
                     if IsUsableItem(itemName) then
                         db_search[itemName] = {
                             slash_cmd="/use "..itemName,
                             icon = GetItemIcon(itemName),
                             tooltipItemString=itemString,
-                            type=SearchIndexType.ITEM
+                            type=SearchIndexType.ITEM,
+                            item_id=itemId
                         }
                     end
                 end

@@ -23,17 +23,47 @@ local methods = {
         self:SetMacroText()
     end,
 
-    -- ["OnRelease"] = function(self)
-    --     self.frame = nil
-    -- end,
+    ["OnRelease"] = function(self)
+        -- make sure to remove the cooldown if present, needed because frames are
+        -- shared and reused. Else you'll see cooldowns on other frames also.
+        if self.myCooldown then
+            self.myCooldown:SetCooldown(0, 0)
+        end
+    end,
 
-    ["SetTexture"] = function(self, spell_id)
-        -- http://www.wowinterface.com/forums/showpost.php?p=255359&postcount=4
+    ["SetTexture"] = function(self, key_data)
+        local icon = nil
+        if key_data and key_data.icon then
+            icon = key_data.icon
+        else
+            -- default texture
+            icon = "Interface\\Icons\\Inv_misc_questionmark"
+        end
+
+        -- create textzre
         local t = self.frame:CreateTexture(nil,"BACKGROUND",nil,-6)
-        t:SetTexture(spell_id)
-        t:SetTexCoord(0.1,0.9,0.1,0.9) --cut out crappy icon border
+        t:SetTexture(icon)
         t:SetAllPoints(self.frame) --make texture same size as button
         self.frame:SetNormalTexture(t)
+
+        -- create cooldown if applicable
+        if key_data then
+            local start, duration = 0, 0
+
+            if key_data.spell_name then
+                start, duration = GetSpellCooldown(key_data.spell_name, "BOOKTYPE_SPELL")
+            end
+
+            if key_data.item_id then
+                start, duration = GetItemCooldown(key_data.item_id)
+            end
+
+            if start > 0 then
+                self.myCooldown = CreateFrame("Cooldown", "myCooldown", self.frame, "CooldownFrameTemplate")
+                self.myCooldown:SetAllPoints()
+                self.myCooldown:SetCooldown(start, duration)
+            end
+        end
     end,
 
     ["SetMacroText"] = function(self, macro_text)

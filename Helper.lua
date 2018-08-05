@@ -33,7 +33,9 @@ function slash_cmd_exists(slash_cmd)
 end
 
 function item_link_to_string(itemLink)
-    return itemLink:match("|H(.*)|h%[(.*)%]|h")
+    local itemString, itemName = itemLink:match("|H(.*)|h%[(.*)%]|h")
+    local itemId = itemString:match(":([^:]+)")
+    return itemString, itemName, itemId
 end
 
 function get_or_create_macro(name, per_char)
