@@ -481,7 +481,7 @@ end
 function show_main_frame(self)
     heights = 0
     --[=====[ KL_MAIN_FRAME --]=====]
-    KL_MAIN_FRAME = AceGUI:Create("Frame")
+    KL_MAIN_FRAME = AceGUI:Create("Window")
     KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
     KL_MAIN_FRAME:EnableResize(false)
     KL_MAIN_FRAME:SetCallback("OnClose", function(widget)
@@ -506,10 +506,10 @@ function show_main_frame(self)
             execute_macro(self)
         elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
             move_selector(self, keyboard_key)
-        elseif keyboard_key == 'RIGHT' then
-            NEXT_BUTTON.frame:Click()
-        elseif keyboard_key == 'LEFT' then
-            PREV_BUTTON.frame:Click()
+        --elseif keyboard_key == 'RIGHT' then
+            --NEXT_BUTTON.frame:Click()
+        --elseif keyboard_key == 'LEFT' then
+            --PREV_BUTTON.frame:Click()
         end
     end)
 
@@ -627,7 +627,7 @@ function show_main_frame(self)
     end)
     pagination_group:AddChild(NEXT_BUTTON)
 
-    KL_MAIN_FRAME:AddChild(pagination_group)
+    --KL_MAIN_FRAME:AddChild(pagination_group)
     heights = heights + pagination_group.frame:GetHeight()
 
     --[=====[ CONTAINER FOR LABELS --]=====]
@@ -714,6 +714,10 @@ function show_results(self, filter)
     if filter == nil then
         filter = '' -- :find cant handle nil
     end
+
+    -- remove extraneous whitespace
+    filter = strtrim(filter)
+
     SEARCH_TABLE_TO_LABEL = {}
     ITEMS_GROUP:ReleaseChildren() -- clear all and start from fresh
 
@@ -761,13 +765,13 @@ function show_results(self, filter)
 
     -- set height into main frame
     local total_item_height = ONE_ITEM_HEIGHT * self.db.char.kl['items_per_page']
-    local decoration_height = 65
+    local decoration_height = 0
 
     --- BFA: no clue why size has to be higher
-    local _, _, _, tocversion = GetBuildInfo()
-    if tocversion == 80000 then
-        decoration_height = 80
-    end
+    --local _, _, _, tocversion = GetBuildInfo()
+    --if tocversion == 80000 then
+        --decoration_height = 80
+    --end
 
     -- 65 is the rest of the frames borders, statusbar, etc
     KL_MAIN_FRAME:SetHeight(total_item_height + heights + decoration_height)
@@ -957,6 +961,7 @@ function create_interactive_label(self, idx, key, filter)
     end
     label:SetWidth(KL_MAIN_FRAME_WIDTH-90)
     label:SetFont(GameFontNormal:GetFont(), 13)
+    label:SetColor(.75,.75,.75,.75)
     label:SetCallback("OnClick", function()
         -- cant propagate mouse clicks, so need to press enter after selecting
         select_label(self, key)
@@ -1172,13 +1177,13 @@ function select_label(self, key, index)
             end
             if go then
                 -- currently selected entry
-                v.label:SetColor(255, 0, 0, 1)
+                v.label:SetColor(.996, .815, .184)
                 CURRENTLY_SELECTED_LABEL_INDEX = k
                 CURRENTLY_SELECTED_LABEL_KEY = v.key
                 edit_master_marco(self, v.key)
                 display_tooltip(self, v.key, v.label.frame)
             else
-                v.label:SetColor(255, 255, 255, 1)
+                v.label:SetColor(.75, .75, .75, .75)
             end
         end
     end
@@ -1294,7 +1299,7 @@ function edit_master_marco(self, key, keyboard_key)
     if body then
         EditMacro(macroId, nil, nil, body, 1, 1);
         SetOverrideBindingMacro(KEYBOARD_LISTENER_FRAME, true, keyboard_key, macroId)
-        KL_MAIN_FRAME:SetStatusText(body)
+        --KL_MAIN_FRAME:SetStatusText(body)
         dprint(self, "edit_master_marco body="..body)
     end
 end
