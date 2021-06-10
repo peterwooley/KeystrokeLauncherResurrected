@@ -46,6 +46,7 @@ L['CONFIG_INDEX_TYPES_MOUNT'] = 'Mounts'
 L['CONFIG_INDEX_TYPES_EQUIP_SET'] = 'Equipment Sets'
 L['CONFIG_INDEX_TYPES_BLIZZ_FRAME'] = 'Blizzard Frames'
 L['CONFIG_INDEX_TYPES_CVAR'] = 'CVARs'
+L['CONFIG_INDEX_TYPES_TOY'] = 'Toys'
 
 -- look n feel
 L['CONFIG_LOOK_N_FEEL_HEADER'] = 'Show / hide elements'

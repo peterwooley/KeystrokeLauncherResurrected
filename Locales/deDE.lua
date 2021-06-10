@@ -46,6 +46,7 @@ L['CONFIG_INDEX_TYPES_MOUNT'] = 'Reittiere'
 L['CONFIG_INDEX_TYPES_EQUIP_SET'] = 'Ausrüstungs-Sets'
 L['CONFIG_INDEX_TYPES_BLIZZ_FRAME'] = 'Blizzard Fenster'
 L['CONFIG_INDEX_TYPES_CVAR'] = 'CVARs'
+L['CONFIG_INDEX_TYPES_TOY'] = 'Spielzeuge'
 
 -- look n feel
 L['CONFIG_LOOK_N_FEEL_HEADER'] = 'Anzeigen / verstecken von Elementen'

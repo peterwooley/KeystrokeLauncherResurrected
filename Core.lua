@@ -13,7 +13,8 @@ local SearchIndexType = Enumm {
     MOUNT = { icon = 'khaki'},
     EQUIP_SET = { icon = 'türkis'},
     BLIZZ_FRAME = { icon = 'schokolade'},
-    CVAR = { icon = 'gelb'}
+    CVAR = { icon = 'gelb'},
+    TOY = { icon = 'khaki'} -- TODO: Change to toy icon name
 }
 local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
 
@@ -63,7 +64,8 @@ function KeystrokeLauncher:OnInitialize()
             [SearchIndexType.MOUNT] = true,
             [SearchIndexType.EQUIP_SET] = true,
             [SearchIndexType.BLIZZ_FRAME] = true,
-            [SearchIndexType.CVAR] = true
+            [SearchIndexType.CVAR] = true,
+            [SearchIndexType.TOY] = true
         }
     end
     -- searchTypeCheckboxes saves the state of the search type boxes between sessions or program runs
@@ -1467,6 +1469,40 @@ function fill_search_data_table(self)
                     tooltipItemString=spellString,
                     type = SearchIndexType.MOUNT
                 }
+            end
+        end
+    end
+
+    --[=====[ TOYS --]=====]
+    if self.db.char.searchDataWhatIndex[SearchIndexType.TOY] then
+        C_ToyBox.SetAllSourceTypeFilters(true);
+        C_ToyBox.SetCollectedShown(true);
+        C_ToyBox.SetUncollectedShown(true);
+        C_ToyBox.SetUnusableShown(true);
+        C_ToyBox.SetFilterString("");
+
+        local NumToys = C_ToyBox.GetNumToys();
+        local toyList = {};
+        for idx = NumToys, 1, -1 do
+            local itemId = C_ToyBox.GetToyFromIndex(idx)
+            if itemId ~= -1 then
+                table.insert(toyList, itemId)
+            end
+        end
+
+        for i, id in pairs(toyList) do
+            if (PlayerHasToy(id) and C_ToyBox.IsToyUsable(id)) then
+                local itemId, toyName, icon = C_ToyBox.GetToyInfo(id)
+                local spellString = item_link_to_string(C_ToyBox.GetToyLink(id))
+                print(itemId, toyName, icon)
+                if toyName ~= nil then
+                  db_search[toyName] = {
+                      slash_cmd="/usetoy "..toyName,
+                      icon = icon,
+                      tooltipItemString=spellString,
+                      type = SearchIndexType.TOY
+                  }
+                end
             end
         end
     end
