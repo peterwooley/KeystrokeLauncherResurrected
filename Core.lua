@@ -396,7 +396,7 @@ function KeystrokeLauncher:OnInitialize()
             }
         }
     }
-    options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db) -- enable profiles
+    --options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db) -- enable profiles
     LibStub("AceConfig-3.0"):RegisterOptionsTable("KeystrokeLauncherOptions", options, {"kl", "keystrokelauncher"})
     AceConfigDialog:AddToBlizOptions("KeystrokeLauncherOptions", "Keystroke Launcher")
 
