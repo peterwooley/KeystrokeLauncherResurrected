@@ -3,7 +3,7 @@
 ## Notes: A Spotlight-like launcher for mounts, toys, macros, spells, addons, and items.
 ## Author: Peter Wooley <peterwooley@gmail.com>
 ## Version: 2.0
-## SavedVariables: KeystrokeLauncherDB
+## SavedVariables: KeystrokeLauncherResurrectedDB
 
 embeds.xml
 Locales\Locales.xml

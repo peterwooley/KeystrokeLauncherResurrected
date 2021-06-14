@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):GetLocale("KeystrokeLauncher")
+local L = LibStub("AceLocale-3.0"):GetLocale("KeystrokeLauncherResurrected")
 
 -- format table as printable string
 function dump(o)

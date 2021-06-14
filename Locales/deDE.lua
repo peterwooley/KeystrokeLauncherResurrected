@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("KeystrokeLauncher", "deDE", false)
+local L = LibStub("AceLocale-3.0"):NewLocale("KeystrokeLauncherResurrected", "deDE", false)
 
 if L then
 

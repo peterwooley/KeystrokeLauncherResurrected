@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("KeystrokeLauncher", "enUS", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("KeystrokeLauncherResurrected", "enUS", true)
 
 if L then
 
@@ -87,7 +87,7 @@ end
 --[=====[ TOOLTIPS --]=====]
 L["DB_SEARCH_RELOAD_UI"] = "Reload the UI"
 L["DB_SEARCH_LOGOUT"] = "Logout"
-L["DB_SEARCH_KL_SHOW"] = "Show Keystrooke Launcher UI"
+L["DB_SEARCH_KL_SHOW"] = "Show Keystroke Launcher UI"
 L["DB_SEARCH_KL_FREQ_PRINT"] = "Print the KL search frequency table"
 L["DB_SEARCH_DISMOUNT"] = "Dismount"
 L["DB_SEARCH_KL_SEARCH_REBUILD"] = "Refresh the search index"

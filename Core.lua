@@ -1,5 +1,5 @@
-KeystrokeLauncher = LibStub("AceAddon-3.0"):NewAddon("KeystrokeLauncher", "AceConsole-3.0")
-local L = LibStub("AceLocale-3.0"):GetLocale("KeystrokeLauncher")
+KeystrokeLauncher = LibStub("AceAddon-3.0"):NewAddon("KeystrokeLauncherResurrected", "AceConsole-3.0")
+local L = LibStub("AceLocale-3.0"):GetLocale("KeystrokeLauncherResurrected")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
@@ -16,7 +16,7 @@ local SearchIndexType = Enumm {
     CVAR = { icon = 'gelb'},
     TOY = { icon = 'khaki'} -- TODO: Change to toy icon name
 }
-local ICON_BASE_PATH = 'Interface\\AddOns\\keystrokelauncher\\Icons\\'
+local ICON_BASE_PATH = 'Interface\\AddOns\\KeystrokeLauncherResurrected\\Icons\\'
 
 -- module global vars
 -- frames
@@ -42,7 +42,7 @@ local ONE_ITEM_HEIGHT -- after show_result is run, this contains the height of o
 
 -- let's go
 function KeystrokeLauncher:OnInitialize()
-    self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherDB")
+    self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherResurrectedDB")
 
     --[=====[ INITIALIZING DB VARS AND SETTING DEFAULTS --]=====]
     if self.db.char.keybindingModifiers == nil then
@@ -100,7 +100,7 @@ function KeystrokeLauncher:OnInitialize()
 
     --[=====[ SLASH COMMANDS/ CONFIG OPTIONS --]=====]
     local options = {
-        name = "Keystroke Launcher",
+        name = "Keystroke Launcher Resurrected",
         handler = KeystrokeLauncher,
         type = "group",
         args = {
@@ -109,7 +109,7 @@ function KeystrokeLauncher:OnInitialize()
                 name = L["config_hide_name"],
                 desc = L["config_hide_desc"],
                 type = "execute",
-                func = function() AceConfigDialog:Close("KeystrokeLauncherOptions") end,
+                func = function() AceConfigDialog:Close("KeystrokeLauncherResurrectedOptions") end,
                 guiHidden = true
             },
             show = {
@@ -117,7 +117,7 @@ function KeystrokeLauncher:OnInitialize()
                 name = L["config_show_name"],
                 desc = L["config_show_desc"],
                 type = "execute",
-                func = function() AceConfigDialog:Open("KeystrokeLauncherOptions") end,
+                func = function() AceConfigDialog:Open("KeystrokeLauncherResurrectedOptions") end,
                 guiHidden = true
             },
             --[=====[ LOOK & FEEL --]=====]
@@ -397,8 +397,8 @@ function KeystrokeLauncher:OnInitialize()
         }
     }
     --options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db) -- enable profiles
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("KeystrokeLauncherOptions", options, {"kl", "keystrokelauncher"})
-    AceConfigDialog:AddToBlizOptions("KeystrokeLauncherOptions", "Keystroke Launcher")
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("KeystrokeLauncherResurrectedOptions", options, {"kl", "keystrokelauncher"})
+    AceConfigDialog:AddToBlizOptions("KeystrokeLauncherResurrectedOptions", "Keystroke Launcher Resurrected")
 
     --[=====[ GLOBAL KEYBOARD LISTENER --]=====]
     KEYBOARD_LISTENER_FRAME = CreateFrame("Frame", "KeyboardListener", UIParent);
@@ -1309,7 +1309,7 @@ end
 -- http://www.wowinterface.com/forums/showthread.php?t=9210
 function get_mem_usage()
     UpdateAddOnMemoryUsage()
-    local mem = GetAddOnMemoryUsage("keystrokelauncher")
+    local mem = GetAddOnMemoryUsage("KeystrokeLauncherResurrected")
     return formatNumber(mem,"%.1f \124cffffd200k")
 end
 
