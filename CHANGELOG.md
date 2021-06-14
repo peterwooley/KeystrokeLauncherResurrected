@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0
+* Added Toys as searchable items.
+* Removed Profile support as it didn't work as expected. Settings are now shared across characters.
+* Removed pagination, changed window chrome, and changed the selection highlight color.
+
 ## v1.3
 
 * added cooldowns for spells and items
