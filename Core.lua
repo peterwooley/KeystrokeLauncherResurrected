@@ -1494,7 +1494,6 @@ function fill_search_data_table(self)
             if (PlayerHasToy(id) and C_ToyBox.IsToyUsable(id)) then
                 local itemId, toyName, icon = C_ToyBox.GetToyInfo(id)
                 local spellString = item_link_to_string(C_ToyBox.GetToyLink(id))
-                print(itemId, toyName, icon)
                 if toyName ~= nil then
                   db_search[toyName] = {
                       slash_cmd="/usetoy "..toyName,
