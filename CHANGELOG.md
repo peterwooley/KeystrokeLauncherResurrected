@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.0.1
+* Removed debug message from being printed to chat on UI reload.
+
 ## v2.0
 * Added Toys as searchable items.
 * Removed Profile support as it didn't work as expected. Settings are now shared across characters.
