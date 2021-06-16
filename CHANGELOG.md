@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.0.2
+* Changed settings from being character-specific to being global. This will reset settings like keybindings and custom search results but they will now work across all characters on your account.
+
 ## v2.0.1
 * Removed debug message from being printed to chat on UI reload.
 
