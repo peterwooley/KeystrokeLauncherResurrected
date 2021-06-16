@@ -45,17 +45,17 @@ function KeystrokeLauncher:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherResurrectedDB")
 
     --[=====[ INITIALIZING DB VARS AND SETTING DEFAULTS --]=====]
-    if self.db.char.keybindingModifiers == nil then
-        self.db.char.keybindingModifiers = {["alt"] = true, ["ctrl"] = true} -- default keybinding
+    if self.db.global.keybindingModifiers == nil then
+        self.db.global.keybindingModifiers = {["alt"] = true, ["ctrl"] = true} -- default keybinding
     end
-    if self.db.char.searchDataFreq == nil then
-        self.db.char.searchDataFreq = {}
+    if self.db.global.searchDataFreq == nil then
+        self.db.global.searchDataFreq = {}
     end
-    if self.db.char.customSearchData == nil then
-        self.db.char.customSearchData = {}
+    if self.db.global.customSearchData == nil then
+        self.db.global.customSearchData = {}
     end
-    if self.db.char.searchDataWhatIndex == nil then
-        self.db.char.searchDataWhatIndex = {
+    if self.db.global.searchDataWhatIndex == nil then
+        self.db.global.searchDataWhatIndex = {
             [SearchIndexType.ADDON] = false,
             [SearchIndexType.MACRO] = false,
             [SearchIndexType.SPELL] = true,
@@ -69,24 +69,24 @@ function KeystrokeLauncher:OnInitialize()
         }
     end
     -- searchTypeCheckboxes saves the state of the search type boxes between sessions or program runs
-    if self.db.char.searchTypeCheckboxes == nil then
-        self.db.char.searchTypeCheckboxes = {}
+    if self.db.global.searchTypeCheckboxes == nil then
+        self.db.global.searchTypeCheckboxes = {}
         toggle_all_search_type_checkboxes(self)
     end
-    if self.db.char.kl == nil then
-        self.db.char.kl = {}
-        self.db.char.kl['debug'] = false
-        self.db.char.kl['show_tooltips'] = true
-        self.db.char.kl['show_type_marker'] = true
-        self.db.char.kl['show_type_checkboxes'] = true
-        self.db.char.kl['enable_quick_filter'] = false
-        self.db.char.kl['show_edit_mode_checkbox'] = false
-        self.db.char.kl['edit_mode_on'] = false
-        self.db.char.kl['enable_top_macros'] = false
-        self.db.char.kl['enable_spell_icons'] = false
+    if self.db.global.kl == nil then
+        self.db.global.kl = {}
+        self.db.global.kl['debug'] = false
+        self.db.global.kl['show_tooltips'] = true
+        self.db.global.kl['show_type_marker'] = true
+        self.db.global.kl['show_type_checkboxes'] = true
+        self.db.global.kl['enable_quick_filter'] = false
+        self.db.global.kl['show_edit_mode_checkbox'] = false
+        self.db.global.kl['edit_mode_on'] = false
+        self.db.global.kl['enable_top_macros'] = false
+        self.db.global.kl['enable_spell_icons'] = false
     end
-    if self.db.char.kl['items_per_page'] == nil then
-        self.db.char.kl['items_per_page'] = 7
+    if self.db.global.kl['items_per_page'] == nil then
+        self.db.global.kl['items_per_page'] = 7
     end
 
     --[=====[ FILL SEARCH DATA TABLE --]=====]
@@ -137,8 +137,8 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'],
                         type = "toggle",
                         descStyle = "inline",
-                        set = function(_, val) self.db.char.kl['show_tooltips'] = val end,
-                        get = function() return self.db.char.kl['show_tooltips'] end
+                        set = function(_, val) self.db.global.kl['show_tooltips'] = val end,
+                        get = function() return self.db.global.kl['show_tooltips'] end
                     },
                     show_type_marker = {
                         order = 3,
@@ -146,8 +146,8 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_MARKER_DESC'],
                         type = "toggle",
                         descStyle = "inline",
-                        set = function(_, val) self.db.char.kl['show_type_marker'] = val end,
-                        get = function() return self.db.char.kl['show_type_marker'] end
+                        set = function(_, val) self.db.global.kl['show_type_marker'] = val end,
+                        get = function() return self.db.global.kl['show_type_marker'] end
                     },
                     show_type_checkboxes = {
                         order = 4,
@@ -156,16 +156,16 @@ function KeystrokeLauncher:OnInitialize()
                         type = "toggle",
                         descStyle = "inline",
                         set = function(_, val)
-                            self.db.char.kl['show_type_checkboxes'] = val
+                            self.db.global.kl['show_type_checkboxes'] = val
                             -- when the gui element is hidden, all group filters are set to true
                             -- and the quick filters are disabled
                             if not val then
                                 toggle_all_search_type_checkboxes(self)
-                                self.db.char.kl['enable_quick_filter'] = false
+                                self.db.global.kl['enable_quick_filter'] = false
                             end
                             set_main_frame_size(self)
                         end,
-                        get = function() return self.db.char.kl['show_type_checkboxes'] end
+                        get = function() return self.db.global.kl['show_type_checkboxes'] end
                     },
                     show_edit_mode_checkbox = {
                         order = 5,
@@ -174,12 +174,12 @@ function KeystrokeLauncher:OnInitialize()
                         type = "toggle",
                         descStyle = "inline",
                         set = function(_, val)
-                            self.db.char.kl['show_edit_mode_checkbox'] = val
+                            self.db.global.kl['show_edit_mode_checkbox'] = val
                             if not val then
-                                self.db.char.kl['edit_mode_on'] = false
+                                self.db.global.kl['edit_mode_on'] = false
                             end
                         end,
-                        get = function() return self.db.char.kl['show_edit_mode_checkbox'] end
+                        get = function() return self.db.global.kl['show_edit_mode_checkbox'] end
                     },
                     show_spell_icons = {
                         order = 6,
@@ -187,8 +187,8 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_DESC'],
                         type = "toggle",
                         descStyle = "inline",
-                        set = function(_, val) self.db.char.kl['enable_spell_icons'] = val end,
-                        get = function() return self.db.char.kl['enable_spell_icons'] end
+                        set = function(_, val) self.db.global.kl['enable_spell_icons'] = val end,
+                        get = function() return self.db.global.kl['enable_spell_icons'] end
                     },
                     -- sizes
                     header_sizes = {
@@ -206,8 +206,8 @@ function KeystrokeLauncher:OnInitialize()
                         softMin = 7,
                         softMax = 14,
                         step = 1,
-                        set = function(_, val) self.db.char.kl['items_per_page'] = val end,
-                        get = function() return self.db.char.kl['items_per_page'] end
+                        set = function(_, val) self.db.global.kl['items_per_page'] = val end,
+                        get = function() return self.db.global.kl['items_per_page'] end
                     },
                     -- experimental look n feel switches
                     header_experimental = {
@@ -220,13 +220,13 @@ function KeystrokeLauncher:OnInitialize()
                         name = L['CONFIG_LOOK_N_FEEL_QUICK_FILTER_NAME'],
                         type = "toggle",
                         set = function(_, val)
-                            self.db.char.kl['enable_quick_filter'] = val
+                            self.db.global.kl['enable_quick_filter'] = val
                             if val then
-                                self.db.char.kl['show_type_checkboxes'] = true
+                                self.db.global.kl['show_type_checkboxes'] = true
                                 set_main_frame_size(self)
                             end
                         end,
-                        get = function() return self.db.char.kl['enable_quick_filter'] end
+                        get = function() return self.db.global.kl['enable_quick_filter'] end
                     },
                     desc_type_marker = {
                         order = 30,
@@ -237,8 +237,8 @@ function KeystrokeLauncher:OnInitialize()
                         order = 31,
                         name = L['CONFIG_LOOK_N_FEEL_TOP_MACROS_NAME'],
                         type = "toggle",
-                        set = function(_, val) self.db.char.kl['enable_top_macros'] = val end,
-                        get = function() return self.db.char.kl['enable_top_macros'] end
+                        set = function(_, val) self.db.global.kl['enable_top_macros'] = val end,
+                        get = function() return self.db.global.kl['enable_top_macros'] end
                     },
                     desc_top_macros = {
                         order = 32,
@@ -260,8 +260,8 @@ function KeystrokeLauncher:OnInitialize()
                     keybinding = {
                         name = L["config_keybinding"],
                         type = "keybinding",
-                        set = function(_, val) self.db.char.keybindingKey = val end,
-                        get = function() return self.db.char.keybindingKey end
+                        set = function(_, val) self.db.global.keybindingKey = val end,
+                        get = function() return self.db.global.keybindingKey end
                     },
                     modifiers = {
                         name = L["config_modifiers"],
@@ -271,8 +271,8 @@ function KeystrokeLauncher:OnInitialize()
                             ctrl = L["config_modifiers_ctrl"],
                             shift = L["config_modifiers_shift"]
                         },
-                        set = function(_, key, state) self.db.char.keybindingModifiers[key] = state end,
-                        get = function(_, key) return self.db.char.keybindingModifiers[key] end
+                        set = function(_, key, state) self.db.global.keybindingModifiers[key] = state end,
+                        get = function(_, key) return self.db.global.keybindingModifiers[key] end
                     }
                 }
             },
@@ -309,11 +309,11 @@ function KeystrokeLauncher:OnInitialize()
                         type = "multiselect",
                         values = function() return enumm_to_table(SearchIndexType) end,
                         set = function(_, key, state)
-                            self.db.char.searchDataWhatIndex[key] = state
+                            self.db.global.searchDataWhatIndex[key] = state
                             set_main_frame_size(self)
                         end,
                         get = function(_, key)
-                            return self.db.char.searchDataWhatIndex[key]
+                            return self.db.global.searchDataWhatIndex[key]
                         end,
                     },
                     header_custom_data = {
@@ -325,7 +325,7 @@ function KeystrokeLauncher:OnInitialize()
                         order = 8,
                         name = L['CLEAR'],
                         type = "execute",
-                        func = function() self.db.char.customSearchData = {} end
+                        func = function() self.db.global.customSearchData = {} end
                     },
                     print_custom_data = {
                         order = 9,
@@ -350,7 +350,7 @@ function KeystrokeLauncher:OnInitialize()
                         name = L["CLEAR"],
                         type = "execute",
                         func = function()
-                            self.db.char.searchDataFreq = {}
+                            self.db.global.searchDataFreq = {}
                             self:Print(L["config_search_freq_table_cleared"])
                         end
                     },
@@ -374,8 +374,8 @@ function KeystrokeLauncher:OnInitialize()
                         confirm = true,
                         confirmText = L["config_reset_confirmText"],
                         func = function()
-                            for k,_ in pairs(self.db.char) do
-                                self.db.char[k] = nil
+                            for k,_ in pairs(self.db.global) do
+                                self.db.global[k] = nil
                             end
                             ReloadUI()
                         end
@@ -389,14 +389,13 @@ function KeystrokeLauncher:OnInitialize()
                         name = "Debug",
                         desc = "Enables / disables debug mode",
                         type = "toggle",
-                        set = function(_, val) self.db.char.kl['debug'] = val end,
-                        get = function() return self.db.char.kl['debug'] end
+                        set = function(_, val) self.db.global.kl['debug'] = val end,
+                        get = function() return self.db.global.kl['debug'] end
                     },
                 }
             }
         }
     }
-    --options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db) -- enable profiles
     LibStub("AceConfig-3.0"):RegisterOptionsTable("KeystrokeLauncherResurrectedOptions", options, {"kl", "keystrokelauncher"})
     AceConfigDialog:AddToBlizOptions("KeystrokeLauncherResurrectedOptions", "Keystroke Launcher Resurrected")
 
@@ -412,10 +411,10 @@ end
 
 function merge_keybindings(self)
     local mergedKeybindings = {}
-    if not is_nil_or_empty(self.db.char.keybindingKey) then
-        mergedKeybindings[self.db.char.keybindingKey] = ''
+    if not is_nil_or_empty(self.db.global.keybindingKey) then
+        mergedKeybindings[self.db.global.keybindingKey] = ''
     end
-    for k, v in pairs(self.db.char.keybindingModifiers) do
+    for k, v in pairs(self.db.global.keybindingModifiers) do
         if v then
             mergedKeybindings[k] = ''
         end
@@ -469,7 +468,7 @@ end
 function dprint(...)
     local arg={...}
     local obj = arg[1]
-    if obj.db.char.kl['debug'] then
+    if obj.db.global.kl['debug'] then
         local printResult = ''
         for i,v in ipairs(arg) do
             if i > 1 then
@@ -495,7 +494,7 @@ function show_main_frame(self)
         end
         AceGUI:Release(widget)
         update_top_macros(self)
-        if self.db.char.kl['debug'] then
+        if self.db.global.kl['debug'] then
             self:Print(get_mem_usage())
         end
     end)
@@ -530,13 +529,13 @@ function show_main_frame(self)
     heights = heights + SEARCH_EDITBOX.frame:GetHeight()
 
     --[=====[ EDIT MODE CHECKBOX AND ADD NEW --]=====]
-    if self.db.char.kl['show_edit_mode_checkbox'] then
+    if self.db.global.kl['show_edit_mode_checkbox'] then
         local edit_mode_checkbox = AceGUI:Create("CheckBox")
         edit_mode_checkbox:SetWidth(120)
         edit_mode_checkbox:SetLabel(L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'])
-        edit_mode_checkbox:SetValue(self.db.char.kl['edit_mode_on'])
+        edit_mode_checkbox:SetValue(self.db.global.kl['edit_mode_on'])
         edit_mode_checkbox:SetCallback("OnValueChanged", function(_, _, value)
-            self.db.char.kl['edit_mode_on'] = value
+            self.db.global.kl['edit_mode_on'] = value
             reload_main_frame(self)
         end)
         KL_MAIN_FRAME:AddChild(edit_mode_checkbox)
@@ -544,7 +543,7 @@ function show_main_frame(self)
     end
 
     --[=====[ SEARCH TYPES CHECKBOXES --]=====]
-    if self.db.char.kl['show_type_checkboxes'] then
+    if self.db.global.kl['show_type_checkboxes'] then
         local search_type_group = AceGUI:Create("SimpleGroup")
         search_type_group:SetFullWidth(true)
         search_type_group:SetLayout("flow")
@@ -553,21 +552,21 @@ function show_main_frame(self)
         for _,v in pairs(SearchIndexType) do
             for k1,_ in pairs(v) do
                 -- only render checkbox if search type is enabled for indexing
-                if self.db.char.searchDataWhatIndex[k1] then
+                if self.db.global.searchDataWhatIndex[k1] then
                     local search_type_checkbox = AceGUI:Create("CheckBox")
                     search_type_checkbox:SetImage(get_icon_for_index_type(k1))
                     local label_text = L['CONFIG_INDEX_TYPES_'..k1]
-                    if self.db.char.kl['enable_quick_filter'] then
+                    if self.db.global.kl['enable_quick_filter'] then
                         -- display the id of that index type, used for the quick filter
                         label_text = '['..counter..'] '..label_text
                     end
                     search_type_checkbox:SetLabel(label_text)
                     search_type_checkbox:SetWidth(150)
                     search_type_checkbox:SetCallback("OnValueChanged", function(_, _, value)
-                        self.db.char.searchTypeCheckboxes[k1] = value
+                        self.db.global.searchTypeCheckboxes[k1] = value
                         show_results(self, SEARCH_EDITBOX:GetText())
                     end)
-                    if self.db.char.searchTypeCheckboxes[k1] == true then
+                    if self.db.global.searchTypeCheckboxes[k1] == true then
                         search_type_checkbox:ToggleChecked()
                     end
                     SEARCH_TYPE_CHECKBOXES[k1] = search_type_checkbox
@@ -581,7 +580,7 @@ function show_main_frame(self)
     end
 
     --[=====[ SEPERATOR --]=====]
-    if self.db.char.kl['show_type_checkboxes'] then
+    if self.db.global.kl['show_type_checkboxes'] then
         local heading = AceGUI:Create("Heading")
         heading:SetFullWidth(true)
         KL_MAIN_FRAME:AddChild(heading)
@@ -589,7 +588,7 @@ function show_main_frame(self)
     end
 
     --[=====[ EDIT MODE TABLE HEADER --]=====]
-    if self.db.char.kl['edit_mode_on'] then
+    if self.db.global.kl['edit_mode_on'] then
         show_edit_header(self)
         heights = heights + EDIT_HEADER.frame:GetHeight()
     end
@@ -699,12 +698,12 @@ function show_edit_header(self)
     -- error when closing the main windo
     f:SetCallback("OnClick", function()
         -- if you change the REPLACE_ME_ string, also adapt the sort_search_data_table function
-        self.db.char.customSearchData["REPLACE_ME_"..randomString(6)] = { type=SearchIndexType.CMD }
+        self.db.global.customSearchData["REPLACE_ME_"..randomString(6)] = { type=SearchIndexType.CMD }
         show_results(self, SEARCH_EDITBOX:GetText())
     end)
     -- set initial state
     f:SetDisabled(true)
-    if self.db.char.kl['edit_mode_on'] then
+    if self.db.global.kl['edit_mode_on'] then
         f:SetDisabled(false)
     end
     EDIT_HEADER:AddChild(f)
@@ -731,12 +730,12 @@ function show_results(self, filter)
 
     -- display
     KL_MAIN_FRAME:PauseLayout()
-    FROM = PAGINATION * self.db.char.kl['items_per_page'] - (self.db.char.kl['items_per_page'] - 1)
-    TO = PAGINATION * self.db.char.kl['items_per_page']
+    FROM = PAGINATION * self.db.global.kl['items_per_page'] - (self.db.global.kl['items_per_page'] - 1)
+    TO = PAGINATION * self.db.global.kl['items_per_page']
     local counter = 1
     for idx,v in ipairs(filtered_table) do
         if idx >= FROM and idx <= TO then
-            if self.db.char.kl['edit_mode_on'] then
+            if self.db.global.kl['edit_mode_on'] then
                 --[=====[ EDIT MODE BOXES --]=====]
                 create_edit_boxes(self, v[1], idx)
             else
@@ -751,7 +750,7 @@ function show_results(self, filter)
         end
     end
 
-    MAX_PAGES = math.floor(#filtered_table / self.db.char.kl['items_per_page'])
+    MAX_PAGES = math.floor(#filtered_table / self.db.global.kl['items_per_page'])
     local label_text = ''
     for i=1, MAX_PAGES do
         if i == PAGINATION then
@@ -766,7 +765,7 @@ function show_results(self, filter)
     KL_MAIN_FRAME:DoLayout()
 
     -- set height into main frame
-    local total_item_height = ONE_ITEM_HEIGHT * self.db.char.kl['items_per_page']
+    local total_item_height = ONE_ITEM_HEIGHT * self.db.global.kl['items_per_page']
     local decoration_height = 0
 
     --- BFA: no clue why size has to be higher
@@ -788,7 +787,7 @@ function filter_sorted_table(self, sorted_table, filter)
 
         -- 1. filter condition: must be in enabled group
         local correct_type = false
-        for k1,v1 in pairs(self.db.char.searchTypeCheckboxes) do
+        for k1,v1 in pairs(self.db.global.searchTypeCheckboxes) do
             -- if type enabled and type of current item matches the enabled type checkboxes
             if v1 and key_data.type == k1 then
                 correct_type = true
@@ -796,8 +795,8 @@ function filter_sorted_table(self, sorted_table, filter)
         end
 
         -- 2. filter condition: show only if not quick filter was used, if yes, that overrules the first filter
-        if self.db.char.kl['enable_quick_filter'] then
-            for k1,v1 in pairs(self.db.char.searchTypeCheckboxes) do
+        if self.db.global.kl['enable_quick_filter'] then
+            for k1,v1 in pairs(self.db.global.searchTypeCheckboxes) do
                 -- SEARCH_TYPE_CHECKBOXES[k1] is nil for currently not displayed type checkboxes
                 if v1 and SEARCH_TYPE_CHECKBOXES[k1] then
                     local checkbox_text = SEARCH_TYPE_CHECKBOXES[k1].text:GetText()
@@ -849,9 +848,9 @@ function create_edit_boxes(self, key, idx)
         key_frame:SetText(key)
         key_frame:SetCallback("OnEnterPressed", function(_, _, text)
             -- when the primary changes, we copy over the data to the new entry and delete the old
-            local t = shallowcopy(self.db.char.customSearchData[key])
-            self.db.char.customSearchData[text] = t
-            self.db.char.customSearchData[key] = nil
+            local t = shallowcopy(self.db.global.customSearchData[key])
+            self.db.global.customSearchData[text] = t
+            self.db.global.customSearchData[key] = nil
             show_results(self, SEARCH_EDITBOX:GetText())
         end)
         frame:AddChild(key_frame)
@@ -895,7 +894,7 @@ function create_edit_boxes(self, key, idx)
     type_frame:SetList(enumm_to_table(SearchIndexType))
     type_frame:SetValue(key_data.type)
     type_frame:SetCallback("OnValueChanged", function(_, _, text)
-        self.db.char.customSearchData[key] = { slash_cmd=key_data.slash_cmd, type=text }
+        self.db.global.customSearchData[key] = { slash_cmd=key_data.slash_cmd, type=text }
         show_results(self, SEARCH_EDITBOX:GetText())
     end)
     frame:AddChild(type_frame)
@@ -906,7 +905,7 @@ function create_edit_boxes(self, key, idx)
         default_button:SetWidth(40)
         default_button:SetText('R')
         default_button:SetCallback("OnClick", function()
-            self.db.char.customSearchData[key] = nil
+            self.db.global.customSearchData[key] = nil
             show_results(self, SEARCH_EDITBOX:GetText())
         end)
         frame:AddChild(default_button)
@@ -918,7 +917,7 @@ function create_edit_boxes(self, key, idx)
         default_button:SetWidth(40)
         default_button:SetText('X')
         default_button:SetCallback("OnClick", function()
-            self.db.char.customSearchData[key] = nil
+            self.db.global.customSearchData[key] = nil
             show_results(self, SEARCH_EDITBOX:GetText())
         end)
         frame:AddChild(default_button)
@@ -936,7 +935,7 @@ function create_interactive_label(self, idx, key, filter)
     frame:SetFullWidth(true)
 
     --[=====[ SPELL ICON --]=====]
-    if self.db.char.kl['enable_spell_icons'] then
+    if self.db.global.kl['enable_spell_icons'] then
         local f = AceGUI:Create("SecureActionButton")
         f:SetTexture(key_data)
         f:SetMacroText(key_data.slash_cmd)
@@ -949,12 +948,12 @@ function create_interactive_label(self, idx, key, filter)
 
     --[=====[ INTERACTIVE LABEL --]=====]
     local label = AceGUI:Create("InteractiveLabel")
-    if self.db.char.kl['debug'] then
+    if self.db.global.kl['debug'] then
         label:SetText(key.." (freq: "..get_freq(self, key, filter)..") (idx: "..idx..")")
     else
         label:SetText(key)
     end
-    if not self.db.char.kl['enable_spell_icons'] then
+    if not self.db.global.kl['enable_spell_icons'] then
         if key_data.icon then
             label:SetImage(key_data.icon)
         else
@@ -971,7 +970,7 @@ function create_interactive_label(self, idx, key, filter)
     frame:AddChild(label)
 
     --[=====[ TYPE ICON --]=====]
-    if self.db.char.kl['show_type_marker'] then
+    if self.db.global.kl['show_type_marker'] then
         local icon = AceGUI:Create("Icon")
         icon:SetImage(get_icon_for_index_type(key_data.type))
         icon:SetImageSize(10, 10)
@@ -991,24 +990,24 @@ function increase_freq(self)
             current_search = CURRENTLY_SELECTED_LABEL_KEY
         end
 
-        if self.db.char.kl['enable_quick_filter'] then
+        if self.db.global.kl['enable_quick_filter'] then
             current_search = current_search:gsub('%d','')
         end
 
         local freq = 1
-        local current_search_freq = self.db.char.searchDataFreq[current_search]
+        local current_search_freq = self.db.global.searchDataFreq[current_search]
         if current_search_freq then
             -- only increase by one, if it is not a different key
             if current_search_freq.key == CURRENTLY_SELECTED_LABEL_KEY then
                 freq = current_search_freq.freq + 1
             end
         end
-        self.db.char.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
+        self.db.global.searchDataFreq[current_search] = { key=CURRENTLY_SELECTED_LABEL_KEY, freq=freq}
 end
 
 -- execute_macro means effectively propagate then close the main window
 function execute_macro(self)
-    if not self.db.char.kl['edit_mode_on'] then
+    if not self.db.global.kl['edit_mode_on'] then
         KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(true)
         increase_freq(self)
         hide_all()
@@ -1017,10 +1016,10 @@ function execute_macro(self)
 end
 
 function update_top_macros(self)
-    if self.db.char.kl['enable_top_macros'] then
+    if self.db.global.kl['enable_top_macros'] then
         local top_table = {}
         -- first aggreate search frequency on key
-        for _,v in pairs(self.db.char.searchDataFreq) do
+        for _,v in pairs(self.db.global.searchDataFreq) do
             if top_table[v.key] then
                 top_table[v.key] = top_table[v.key] + v.freq
             else
@@ -1059,14 +1058,14 @@ end
 
 function print_search_data_freq(self)
     self:Print("Content of Search Frequence DB:")
-    for k,v in pairs(self.db.char.searchDataFreq) do
+    for k,v in pairs(self.db.global.searchDataFreq) do
         self:Print(' ', string.lpad(v.freq, 4), string.lpad(k, 16), v.key)
     end
 end
 
 function print_custom_search_db(self)
     self:Print("Content of Custom Search DB:")
-    for k,v in pairs(self.db.char.customSearchData) do
+    for k,v in pairs(self.db.global.customSearchData) do
         self:Print(' '..k)
         for k1,v1 in pairs(v) do
             self:Print('  '..k1..'='..v1)
@@ -1076,7 +1075,7 @@ end
 
 function print_search_db(self, key)
     self:Print("Content of Search DB:")
-    for k,v in pairs(self.db.char.searchDataTable) do
+    for k,v in pairs(self.db.global.searchDataTable) do
         if k == key then
             self:Print(' '..k)
             for k1,v1 in pairs(v) do
@@ -1088,7 +1087,7 @@ end
 
 function get_freq(self, key, current_filter)
     -- when there's an entry for current_filter, that always comes on top
-    local db_entry = self.db.char.searchDataFreq[current_filter]
+    local db_entry = self.db.global.searchDataFreq[current_filter]
     if db_entry then
         if db_entry.key == key then
             return 1000 + db_entry.freq
@@ -1096,7 +1095,7 @@ function get_freq(self, key, current_filter)
     end
     -- else sum up how often key was executed, 0 is default
     local freq = 0
-    for _, v in pairs(self.db.char.searchDataFreq) do
+    for _, v in pairs(self.db.global.searchDataFreq) do
         if v.key == key then
             freq = freq + v.freq
         end
@@ -1111,10 +1110,10 @@ function sort_search_data_table(self, filter)
     -- the custom one overwrites the not custom one
     -- which is intended, because it overrules the other one
     local merged_table = {}
-    for k,v in pairs(self.db.char.searchDataTable) do
+    for k,v in pairs(self.db.global.searchDataTable) do
         merged_table[k] = v
     end
-    for k,v in pairs(self.db.char.customSearchData) do
+    for k,v in pairs(self.db.global.customSearchData) do
         merged_table[k] = v
     end
 
@@ -1151,13 +1150,13 @@ end
 function toggle_all_search_type_checkboxes(self)
     for _,v in pairs(SearchIndexType) do
         for k1,_ in pairs(v) do
-            self.db.char.searchTypeCheckboxes[k1] = true
+            self.db.global.searchTypeCheckboxes[k1] = true
         end
     end
 end
 
 function move_selector(self, keyboard_key)
-    if not self.db.char.kl['edit_mode_on'] then
+    if not self.db.global.kl['edit_mode_on'] then
         if keyboard_key == "DOWN" and CURRENTLY_SELECTED_LABEL_INDEX < TO then
             select_label(self, nil, CURRENTLY_SELECTED_LABEL_INDEX+1)
         elseif keyboard_key == "UP" and CURRENTLY_SELECTED_LABEL_INDEX > FROM then
@@ -1168,7 +1167,7 @@ end
 
 function select_label(self, key, index)
     -- method disable in edit_mode, as there is nothing to highlight
-    if not self.db.char.kl['edit_mode_on'] then
+    if not self.db.global.kl['edit_mode_on'] then
         for k, v in pairs(SEARCH_TABLE_TO_LABEL) do
             -- differnt if logic depening on call with key or index
             local go = false
@@ -1192,7 +1191,7 @@ function select_label(self, key, index)
 end
 
 function set_search_frame_size(self)
-    if self.db.char.kl['show_edit_mode_checkbox'] then
+    if self.db.global.kl['show_edit_mode_checkbox'] then
         -- make space for the edit mode check box
         SEARCH_EDITBOX:SetWidth(KL_MAIN_FRAME_WIDTH-160)
     else
@@ -1204,7 +1203,7 @@ function set_main_frame_size(self)
     local cols = 0
     for _,v in pairs(SearchIndexType) do
         for k1,_ in pairs(v) do
-            if self.db.char.searchDataWhatIndex[k1] then
+            if self.db.global.searchDataWhatIndex[k1] then
                 cols = cols + 1
             end
         end
@@ -1217,9 +1216,9 @@ function set_main_frame_size(self)
         cols = 2
     end
 
-    if self.db.char.kl['edit_mode_on'] then
+    if self.db.global.kl['edit_mode_on'] then
         KL_MAIN_FRAME_WIDTH = one_item_width * 5
-    elseif self.db.char.kl['show_type_checkboxes'] then
+    elseif self.db.global.kl['show_type_checkboxes'] then
         KL_MAIN_FRAME_WIDTH = one_item_width * cols
     else
         KL_MAIN_FRAME_WIDTH = 380
@@ -1233,8 +1232,8 @@ function set_main_frame_size(self)
 end
 
 function display_tooltip(self, key, owner)
-    if self.db.char.kl['show_tooltips'] then
-        local detailed_data = self.db.char.searchDataTable[key]
+    if self.db.global.kl['show_tooltips'] then
+        local detailed_data = self.db.global.searchDataTable[key]
         if detailed_data then
             if detailed_data['tooltipItemString'] then
                 GameTooltip:SetOwner(owner, nil, -40)
@@ -1256,8 +1255,8 @@ end
 -- @value if nil, the whole entry is returned
 function get_search_data(self, key, value)
     local rv
-    local data = self.db.char.searchDataTable[key]
-    local custom_data = self.db.char.customSearchData[key]
+    local data = self.db.global.searchDataTable[key]
+    local custom_data = self.db.global.customSearchData[key]
 
     local custom_entry_exists = false
     local entry_exists = false
@@ -1283,12 +1282,12 @@ end
 
 function set_custom_search_data(self, key, sub_key, value)
     -- copy over values if not exist yet
-    if not self.db.char.customSearchData[key] then
-        local t = shallowcopy(self.db.char.searchDataTable[key])
-        self.db.char.customSearchData[key] = t
+    if not self.db.global.customSearchData[key] then
+        local t = shallowcopy(self.db.global.searchDataTable[key])
+        self.db.global.customSearchData[key] = t
     end
 
-    self.db.char.customSearchData[key][sub_key] = value
+    self.db.global.customSearchData[key][sub_key] = value
     show_results(self, SEARCH_EDITBOX:GetText())
 end
 
@@ -1327,11 +1326,11 @@ function formatNumber(number, pattern)
 end
 
 function fill_search_data_table(self)
-    self.db.char.searchDataTable = {}
-    local db_search = self.db.char.searchDataTable
+    self.db.global.searchDataTable = {}
+    local db_search = self.db.global.searchDataTable
 
     --[=====[ ADDON --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.ADDON] then
+    if self.db.global.searchDataWhatIndex[SearchIndexType.ADDON] then
         for i=1, GetNumAddOns() do
             local name, title, notes, addonenabled = GetAddOnInfo(i)
             if notes == nil then
@@ -1367,7 +1366,7 @@ function fill_search_data_table(self)
     end
 
     --[=====[ MACROS --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.MACRO] then
+    if self.db.global.searchDataWhatIndex[SearchIndexType.MACRO] then
         local numglobal, numperchar = GetNumMacros();
         for i = 1, numglobal do
             local name, iconTexture, body = GetMacroInfo(i)
@@ -1394,7 +1393,7 @@ function fill_search_data_table(self)
     end
 
     --[=====[ SPELLS --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.SPELL] then
+    if self.db.global.searchDataWhatIndex[SearchIndexType.SPELL] then
         local i = 1
         while true do
             local spellName = GetSpellBookItemName(i, BOOKTYPE_SPELL)
@@ -1437,7 +1436,7 @@ function fill_search_data_table(self)
     })
 
     --[=====[ ITEMS --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.ITEM] then
+    if self.db.global.searchDataWhatIndex[SearchIndexType.ITEM] then
         for bag=0, NUM_BAG_SLOTS do
             for bagSlots=1, GetContainerNumSlots(bag) do
                 local itemLink = GetContainerItemLink(bag, bagSlots)
@@ -1458,7 +1457,7 @@ function fill_search_data_table(self)
     end
 
     --[=====[ MOUNTS --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.MOUNT] then
+    if self.db.global.searchDataWhatIndex[SearchIndexType.MOUNT] then
         for i=1, C_MountJournal.GetNumDisplayedMounts() do
             local creatureName, spellID, icon, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetDisplayedMountInfo(i)
             local spellString, spellname = item_link_to_string(GetSpellLink(spellID))
@@ -1474,7 +1473,7 @@ function fill_search_data_table(self)
     end
 
     --[=====[ TOYS --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.TOY] then
+    if self.db.global.searchDataWhatIndex[SearchIndexType.TOY] then
         C_ToyBox.SetAllSourceTypeFilters(true);
         C_ToyBox.SetCollectedShown(true);
         C_ToyBox.SetUncollectedShown(true);
@@ -1507,7 +1506,7 @@ function fill_search_data_table(self)
     end
 
     --[=====[ EQUIPMENT SETS --]=====]
-    if self.db.char.searchDataWhatIndex[SearchIndexType.EQUIP_SET] then
+    if self.db.global.searchDataWhatIndex[SearchIndexType.EQUIP_SET] then
         for i=0, C_EquipmentSet.GetNumEquipmentSets() do
             local name, iconFileID = C_EquipmentSet.GetEquipmentSetInfo(i)
             if name then
@@ -1544,7 +1543,7 @@ function fill_search_data_table(self)
     local disabled = L["INDEX_DISABLED"]
     local enabled = L["INDEX_ENABLED"]
     dprint(self, L["INDEX_HEADER"])
-    for type, type_enabled in pairs(self.db.char.searchDataWhatIndex) do
+    for type, type_enabled in pairs(self.db.global.searchDataWhatIndex) do
         if type_enabled then
             enabled = enabled..type..' '
         else
@@ -1569,11 +1568,11 @@ function add_many(self, type, tables)
 end
 
 function add_one(self, type, data)
-    if self.db.char.searchDataWhatIndex[type] then
+    if self.db.global.searchDataWhatIndex[type] then
         -- tooltip default value is the key
         if not data[3] then
             data[3] = data[1]
         end
-        self.db.char.searchDataTable[data[1]] = { slash_cmd=data[2], tooltipText=data[3], type=type}
+        self.db.global.searchDataTable[data[1]] = { slash_cmd=data[2], tooltipText=data[3], type=type}
     end
 end
