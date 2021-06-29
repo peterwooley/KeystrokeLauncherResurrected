@@ -1,8 +1,8 @@
-## Interface: 90005
+## Interface: 90100
 ## Title: Keystroke Launcher Resurrected
 ## Notes: A Spotlight-like launcher for mounts, toys, macros, spells, addons, and items.
 ## Author: Peter Wooley <peterwooley@gmail.com>
-## Version: 2.0.2
+## Version: 2.0.3
 ## SavedVariables: KeystrokeLauncherResurrectedDB
 
 embeds.xml
