@@ -1372,7 +1372,7 @@ function fill_search_data_table(self)
             local name, iconTexture, body = GetMacroInfo(i)
             if name then
                 db_search[name] = {
-                    slash_cmd="/cast"..name,
+                    slash_cmd=body,
                     icon=iconTexture,
                     tooltipText=body,
                     type=SearchIndexType.MACRO
@@ -1383,7 +1383,7 @@ function fill_search_data_table(self)
             local name, iconTexture, body = GetMacroInfo(i + 120)
             if name then
                 db_search[name] = {
-                    slash_cmd="/cast "..name,
+                    slash_cmd=body,
                     icon=iconTexture,
                     tooltipText=body,
                     type=SearchIndexType.MACRO
