@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.0.5
+* Marked as compatible with Patch 9.2
+
 ## v2.0.4
 * Fixed macro execution. Personal and account-wide macros should now run properly from the Keystroke Launcher window.
 
