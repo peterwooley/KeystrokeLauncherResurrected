@@ -961,7 +961,7 @@ function create_interactive_label(self, idx, key, filter)
         end
     end
     label:SetWidth(KL_MAIN_FRAME_WIDTH-90)
-    label:SetFont(GameFontNormal:GetFont(), 13)
+    label:SetFontObject(GameFontNormal)
     label:SetColor(.75,.75,.75,.75)
     label:SetCallback("OnClick", function()
         -- cant propagate mouse clicks, so need to press enter after selecting
