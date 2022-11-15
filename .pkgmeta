@@ -1,11 +1,5 @@
 enable-nolib-creation: no
-   
-manual-changelog:
-    filename: CHANGELOG.md
-    markup-type: markdown
-
 package-as: KeystrokeLauncherResurrected
-
 ignore:
     - images
     - README.md
