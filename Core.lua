@@ -1438,8 +1438,8 @@ function fill_search_data_table(self)
     --[=====[ ITEMS --]=====]
     if self.db.global.searchDataWhatIndex[SearchIndexType.ITEM] then
         for bag=0, NUM_BAG_SLOTS do
-            for bagSlots=1, GetContainerNumSlots(bag) do
-                local itemLink = GetContainerItemLink(bag, bagSlots)
+            for bagSlots=1, C_Container.GetContainerNumSlots(bag) do
+                local itemLink = C_Container.GetContainerItemLink(bag, bagSlots)
                 if itemLink then
                     local itemString, itemName, itemId = item_link_to_string(itemLink)
                     if IsUsableItem(itemName) then
