@@ -40,14 +40,14 @@ local PAGINATION = 1 -- stores the current visible page
 local MAX_PAGES = 2 -- stores the max amount if pages, depends on the amount of results
 local ONE_ITEM_HEIGHT -- after show_result is run, this contains the height of one item
 
+-- Binding Variables
+BINDING_NAME_KL_LAUNCH = "Show Keystroke Launcher";
+
 -- let's go
 function KeystrokeLauncher:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("KeystrokeLauncherResurrectedDB")
 
     --[=====[ INITIALIZING DB VARS AND SETTING DEFAULTS --]=====]
-    if self.db.global.keybindingModifiers == nil then
-        self.db.global.keybindingModifiers = {["alt"] = true, ["ctrl"] = true} -- default keybinding
-    end
     if self.db.global.searchDataFreq == nil then
         self.db.global.searchDataFreq = {}
     end
@@ -137,6 +137,7 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_TOOLTIP_DESC'],
                         type = "toggle",
                         descStyle = "inline",
+                        width = 1.3,
                         set = function(_, val) self.db.global.kl['show_tooltips'] = val end,
                         get = function() return self.db.global.kl['show_tooltips'] end
                     },
@@ -146,6 +147,7 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_MARKER_DESC'],
                         type = "toggle",
                         descStyle = "inline",
+                        width = 1.3,
                         set = function(_, val) self.db.global.kl['show_type_marker'] = val end,
                         get = function() return self.db.global.kl['show_type_marker'] end
                     },
@@ -155,6 +157,7 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_CHECKBOXES_DESC'],
                         type = "toggle",
                         descStyle = "inline",
+                        width = 1.3,
                         set = function(_, val)
                             self.db.global.kl['show_type_checkboxes'] = val
                             -- when the gui element is hidden, all group filters are set to true
@@ -173,6 +176,7 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_EDIT_MODE_DESC'],
                         type = "toggle",
                         descStyle = "inline",
+                        width = 1.3,
                         set = function(_, val)
                             self.db.global.kl['show_edit_mode_checkbox'] = val
                             if not val then
@@ -187,6 +191,7 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_DESC'],
                         type = "toggle",
                         descStyle = "inline",
+                        width = 1.3,
                         set = function(_, val) self.db.global.kl['enable_spell_icons'] = val end,
                         get = function() return self.db.global.kl['enable_spell_icons'] end
                     },
@@ -253,26 +258,23 @@ function KeystrokeLauncher:OnInitialize()
                 name = L["config_keybinding"],
                 type = "group",
                 args = {
-                    desc = {
-                        name = L["config_group_keybindungs_desc"],
-                        type = "header"
-                    },
                     keybinding = {
                         name = L["config_keybinding"],
                         type = "keybinding",
-                        set = function(_, val) self.db.global.keybindingKey = val end,
-                        get = function() return self.db.global.keybindingKey end
-                    },
-                    modifiers = {
-                        name = L["config_modifiers"],
-                        type = "multiselect",
-                        values = {
-                            alt = L["config_modifiers_alt"],
-                            ctrl = L["config_modifiers_ctrl"],
-                            shift = L["config_modifiers_shift"]
-                        },
-                        set = function(_, key, state) self.db.global.keybindingModifiers[key] = state end,
-                        get = function(_, key) return self.db.global.keybindingModifiers[key] end
+                        set = function(_, val)
+                            -- we only want one key to be ever bound to this
+                            local key1, key2 = GetBindingKey("KL_LAUNCH") -- so first we get both keys associated to thsi addon (in case there are)
+                            -- then we delete their binding from this addon (we clear every binding from this addon)
+                            if key1 then SetBinding(key1) end
+                            if key2 then SetBinding(key2) end
+
+                            -- and finally we set the new binding key
+                            if (newKey ~= '') then -- considering we pressed one (not ESC)
+                                SetBinding(val, "KL_LAUNCH"); 
+                            end
+                            SaveBindings(GetCurrentBindingSet())
+                        end,
+                        get = function() return GetBindingKey("KL_LAUNCH"); end
                     }
                 }
             },
@@ -401,10 +403,35 @@ function KeystrokeLauncher:OnInitialize()
 
     --[=====[ GLOBAL KEYBOARD LISTENER --]=====]
     KEYBOARD_LISTENER_FRAME = CreateFrame("Frame", "KeyboardListener", UIParent);
-    KEYBOARD_LISTENER_FRAME:SetPropagateKeyboardInput(true)
-    KEYBOARD_LISTENER_FRAME:SetScript("OnKeyDown", function(_, keyboard_key)
-        if check_key_bindings(self, keyboard_key) then
-            start(self)
+
+    KEYBOARD_LISTENER_FRAME:RegisterEvent("PLAYER_LOGIN")
+    KEYBOARD_LISTENER_FRAME:SetScript("OnEvent", function(_, event, ...)
+        if(event == "PLAYER_LOGIN") then
+            -- Set default key binding if no keys are currently bound
+            local key1, key2 = GetBindingKey("KL_LAUNCH")
+            if key1 == nil and key2 == nil then
+
+                if self.db.global.keybindingModifiers == nil then
+                    -- If the old keybindings are nil, set the new default keybinding
+                    SetBinding("CTRL-SHIFT-P", "KL_LAUNCH");
+                else
+                    -- If old keybindings are present, use them as the new keybinding and then delete the old keybinds
+                    --self.db.global.keybindingModifiers = {["alt"] = true, ["ctrl"] = true} -- default keybinding
+                    local keybindings_list = {}
+                    for k,_ in pairs(merge_keybindings(self)) do
+                        table.insert(keybindings_list, k)
+                    end
+
+                    local oldKeybinding = string.upper(table.concat(keybindings_list, '-'))
+                    SetBinding(oldKeybinding, "KL_LAUNCH");
+
+                    -- Delete the old keyboard modifier after upgrading to the new system
+                    self.db.global.keybindingModifiers = nil
+                end
+
+                SaveBindings(GetCurrentBindingSet())
+            end
+            
         end
     end)
 end
@@ -438,31 +465,8 @@ function start(self, filter)
     SEARCH_EDITBOX:SetText(filter)
     show_results(self, filter)
 end
-
-function check_key_bindings(self, keyboard_key)
-    -- collect currently pressed buttons
-    local pressedButtons = {}
-    if not table.contains({"LALT", "LCTRL", "LSHIFT", "RALT", "RCTRL", "RSHIFT"}, keyboard_key) then
-        pressedButtons[keyboard_key] = ''
-    end
-    if IsControlKeyDown() then pressedButtons["ctrl"] = '' end
-    if IsAltKeyDown() then pressedButtons["alt"] = '' end
-    if IsShiftKeyDown() then pressedButtons["shift"] = '' end
-
-    -- format configured keybindings
-    local mergedKeybindings = merge_keybindings(self)
-
-    -- compare both tables for exakt equality
-    if table.length(pressedButtons) == table.length(mergedKeybindings) then
-        local showWindow = true
-        for k, v in pairs(mergedKeybindings) do
-            if not pressedButtons[k] then
-                showWindow = false
-            end
-        end
-        return showWindow
-    end
-    return false
+function KeystrokeLauncher:Start()
+    start(self)
 end
 
 function dprint(...)
@@ -482,9 +486,7 @@ end
 function show_main_frame(self)
     heights = 0
     --[=====[ KL_MAIN_FRAME --]=====]
-    KL_MAIN_FRAME = AceGUI:Create("Window")
-    KL_MAIN_FRAME:SetTitle("Keystroke Launcher")
-    KL_MAIN_FRAME:EnableResize(false)
+    KL_MAIN_FRAME = AceGUI:Create("KeystrokeLauncherWindow")
     KL_MAIN_FRAME:SetCallback("OnClose", function(widget)
         if not RELOADING then
             -- do not clear keybinding if we are just regenerating the ui
@@ -507,10 +509,6 @@ function show_main_frame(self)
             execute_macro(self)
         elseif keyboard_key == 'UP' or keyboard_key == 'DOWN' then
             move_selector(self, keyboard_key)
-        --elseif keyboard_key == 'RIGHT' then
-            --NEXT_BUTTON.frame:Click()
-        --elseif keyboard_key == 'LEFT' then
-            --PREV_BUTTON.frame:Click()
         end
     end)
 
@@ -520,9 +518,14 @@ function show_main_frame(self)
     SEARCH_EDITBOX:SetFocus()
     SEARCH_EDITBOX:DisableButton(true)
     SEARCH_EDITBOX.editbox:SetPropagateKeyboardInput(true)
+    SEARCH_EDITBOX.editbox:SetFontObject("GameFontNormalLarge")
+    SEARCH_EDITBOX.editbox:SetPoint("TOPLEFT",SEARCH_EDITBOX.frame,"TOPLEFT",0,0)
+    SEARCH_EDITBOX.editbox.Left:SetTexture()
+    SEARCH_EDITBOX.editbox.Middle:SetTexture()
+    SEARCH_EDITBOX.editbox.Right:SetTexture()
+
     SEARCH_EDITBOX.editbox:SetScript("OnEscapePressed", function() hide_all() end)
     SEARCH_EDITBOX:SetCallback("OnTextChanged", function(_, _, value)
-        PAGINATION = 1
         show_results(self, value)
     end)
     KL_MAIN_FRAME:AddChild(SEARCH_EDITBOX)
@@ -531,7 +534,7 @@ function show_main_frame(self)
     --[=====[ EDIT MODE CHECKBOX AND ADD NEW --]=====]
     if self.db.global.kl['show_edit_mode_checkbox'] then
         local edit_mode_checkbox = AceGUI:Create("CheckBox")
-        edit_mode_checkbox:SetWidth(120)
+        edit_mode_checkbox:SetWidth(100)
         edit_mode_checkbox:SetLabel(L['CONFIG_LOOK_N_FEEL_EDIT_MODE_NAME'])
         edit_mode_checkbox:SetValue(self.db.global.kl['edit_mode_on'])
         edit_mode_checkbox:SetCallback("OnValueChanged", function(_, _, value)
@@ -539,7 +542,7 @@ function show_main_frame(self)
             reload_main_frame(self)
         end)
         KL_MAIN_FRAME:AddChild(edit_mode_checkbox)
-        heights = heights + edit_mode_checkbox.frame:GetHeight()
+        --heights = heights + edit_mode_checkbox.frame:GetHeight()
     end
 
     --[=====[ SEARCH TYPES CHECKBOXES --]=====]
@@ -576,7 +579,7 @@ function show_main_frame(self)
             end
         end
         KL_MAIN_FRAME:AddChild(search_type_group)
-        heights = heights + search_type_group.frame:GetHeight()
+        heights = heights + search_type_group.frame:GetHeight() + 8
     end
 
     --[=====[ SEPERATOR --]=====]
@@ -592,44 +595,6 @@ function show_main_frame(self)
         show_edit_header(self)
         heights = heights + EDIT_HEADER.frame:GetHeight()
     end
-
-    --[=====[ PAGINATION --]=====]
-    local pagination_group = AceGUI:Create("SimpleGroup")
-    pagination_group:SetFullWidth(true)
-    pagination_group:SetLayout("Flow")
-
-    -- PREVIOUS
-    PREV_BUTTON = AceGUI:Create("Button")
-    PREV_BUTTON:SetWidth(40)
-    PREV_BUTTON:SetText("<")
-    PREV_BUTTON:SetCallback("OnClick", function()
-        if PAGINATION > 1 then
-            PAGINATION = PAGINATION - 1
-            show_results(self, SEARCH_EDITBOX:GetText())
-        end
-    end)
-    pagination_group:AddChild(PREV_BUTTON)
-
-    -- LABEL
-    PAGINATION_LABEL = AceGUI:Create("Label")
-    PAGINATION_LABEL:SetWidth(KL_MAIN_FRAME_WIDTH - 120)
-    PAGINATION_LABEL.label:SetJustifyH("CENTER")
-    pagination_group:AddChild(PAGINATION_LABEL)
-
-    -- NEXT
-    NEXT_BUTTON = AceGUI:Create("Button")
-    NEXT_BUTTON:SetWidth(40)
-    NEXT_BUTTON:SetText(">")
-    NEXT_BUTTON:SetCallback("OnClick", function()
-        if PAGINATION < MAX_PAGES then
-            PAGINATION = PAGINATION + 1
-            show_results(self, SEARCH_EDITBOX:GetText())
-        end
-    end)
-    pagination_group:AddChild(NEXT_BUTTON)
-
-    --KL_MAIN_FRAME:AddChild(pagination_group)
-    heights = heights + pagination_group.frame:GetHeight()
 
     --[=====[ CONTAINER FOR LABELS --]=====]
     ITEMS_GROUP = AceGUI:Create("SimpleGroup")
@@ -650,43 +615,50 @@ function show_edit_header(self)
     local f = AceGUI:Create("Label")
     f:SetWidth(30)
     f:SetText('#')
-    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
-    f:SetWidth(30)
-    f:SetText('freq')
-    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetWidth(40)
+    f:SetText('Freq.')
+    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(150)
     f:SetText('Key')
-    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(180)
     f:SetText('Slash Command')
-    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(130)
     f:SetText('Tooltip Text')
-    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
-    EDIT_HEADER:AddChild(f)
-
-    f = AceGUI:Create("Label")
-    f:SetWidth(130)
-    f:SetText('Tooltip ItemString')
-    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+   -- f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+   f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(120)
+    f:SetText('Tooltip ItemString')
+    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetFontObject("GameFontNormal")
+    EDIT_HEADER:AddChild(f)
+
+    f = AceGUI:Create("Label")
+    f:SetWidth(130)
     f:SetText('Category')
-    f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
+    f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     -- add new line
@@ -750,32 +722,15 @@ function show_results(self, filter)
         end
     end
 
-    MAX_PAGES = math.floor(#filtered_table / self.db.global.kl['items_per_page'])
-    local label_text = ''
-    for i=1, MAX_PAGES do
-        if i == PAGINATION then
-            label_text = label_text.."  >"..i..'<'
-        else
-            label_text = label_text.."  "..i
-        end
-    end
-
-    PAGINATION_LABEL:SetText(label_text)
     KL_MAIN_FRAME:ResumeLayout()
     KL_MAIN_FRAME:DoLayout()
 
     -- set height into main frame
-    local total_item_height = ONE_ITEM_HEIGHT * self.db.global.kl['items_per_page']
-    local decoration_height = 0
-
-    --- BFA: no clue why size has to be higher
-    --local _, _, _, tocversion = GetBuildInfo()
-    --if tocversion == 80000 then
-        --decoration_height = 80
-    --end
-
-    -- 65 is the rest of the frames borders, statusbar, etc
-    KL_MAIN_FRAME:SetHeight(total_item_height + heights + decoration_height)
+    local total_item_height = ONE_ITEM_HEIGHT * (counter-1) + 24 --self.db.global.kl['items_per_page']
+    if counter == 1 then
+        total_item_height = total_item_height - 6
+    end
+    KL_MAIN_FRAME:SetHeight(total_item_height + heights)
 end
 
 function filter_sorted_table(self, sorted_table, filter)
@@ -837,7 +792,7 @@ function create_edit_boxes(self, key, idx)
 
     -- FREQUENCY
     local freq_frame = AceGUI:Create("Label")
-    freq_frame:SetWidth(30)
+    freq_frame:SetWidth(40)
     freq_frame:SetText(get_freq(self, key))
     frame:AddChild(freq_frame)
 
@@ -881,7 +836,7 @@ function create_edit_boxes(self, key, idx)
 
     -- TOOLTIP
     local tooltip_frame = AceGUI:Create("EditBox")
-    tooltip_frame:SetWidth(130)
+    tooltip_frame:SetWidth(120)
     tooltip_frame:SetText(key_data.tooltipItemString)
     tooltip_frame:SetCallback("OnEnterPressed", function(_, _, text)
         set_custom_search_data(self, key, 'tooltipItemString', text)
@@ -890,7 +845,7 @@ function create_edit_boxes(self, key, idx)
 
     -- TYPE
     local type_frame = AceGUI:Create("Dropdown")
-    type_frame:SetWidth(120)
+    type_frame:SetWidth(130)
     type_frame:SetList(enumm_to_table(SearchIndexType))
     type_frame:SetValue(key_data.type)
     type_frame:SetCallback("OnValueChanged", function(_, _, text)
@@ -931,12 +886,16 @@ function create_interactive_label(self, idx, key, filter)
     local key_data = get_search_data(self, key)
 
     local frame = AceGUI:Create("SimpleGroup")
+    local label = AceGUI:Create("InteractiveLabel")
+    local labelWidth = KL_MAIN_FRAME_WIDTH
+    
     frame:SetLayout("flow")
     frame:SetFullWidth(true)
 
     --[=====[ SPELL ICON --]=====]
     if self.db.global.kl['enable_spell_icons'] then
         local f = AceGUI:Create("SecureActionButton")
+        f.frame:RegisterForClicks("AnyUp", "AnyDown")
         f:SetTexture(key_data)
         f:SetMacroText(key_data.slash_cmd)
         f.frame:SetScript("PostClick", function()
@@ -944,10 +903,11 @@ function create_interactive_label(self, idx, key, filter)
             hide_all()
         end)
         frame:AddChild(f)
+
+        labelWidth = labelWidth - 25
     end
 
     --[=====[ INTERACTIVE LABEL --]=====]
-    local label = AceGUI:Create("InteractiveLabel")
     if self.db.global.kl['debug'] then
         label:SetText(key.." (freq: "..get_freq(self, key, filter)..") (idx: "..idx..")")
     else
@@ -957,10 +917,11 @@ function create_interactive_label(self, idx, key, filter)
         if key_data.icon then
             label:SetImage(key_data.icon)
         else
-            label:SetImage(ICON_BASE_PATH..'transparent.blp')
+            -- Set a default icon for any commands without icons
+            label:SetImage('134332')
         end
     end
-    label:SetWidth(KL_MAIN_FRAME_WIDTH-90)
+    
     label:SetFontObject(GameFontNormal)
     label:SetColor(.75,.75,.75,.75)
     label:SetCallback("OnClick", function()
@@ -972,12 +933,15 @@ function create_interactive_label(self, idx, key, filter)
     --[=====[ TYPE ICON --]=====]
     if self.db.global.kl['show_type_marker'] then
         local icon = AceGUI:Create("Icon")
+        labelWidth = labelWidth - 40
         icon:SetImage(get_icon_for_index_type(key_data.type))
         icon:SetImageSize(10, 10)
         icon:SetWidth(10)
         frame:AddChild(icon)
     end
 
+
+    label:SetWidth(labelWidth)
     SEARCH_TABLE_TO_LABEL[idx] = {key=key, label=label}
     ITEMS_GROUP:AddChild(frame)
     ONE_ITEM_HEIGHT = frame.frame:GetHeight()
@@ -1193,9 +1157,9 @@ end
 function set_search_frame_size(self)
     if self.db.global.kl['show_edit_mode_checkbox'] then
         -- make space for the edit mode check box
-        SEARCH_EDITBOX:SetWidth(KL_MAIN_FRAME_WIDTH-160)
+        SEARCH_EDITBOX:SetWidth(KL_MAIN_FRAME_WIDTH-140)
     else
-        SEARCH_EDITBOX:SetFullWidth(true)
+        SEARCH_EDITBOX:SetWidth(KL_MAIN_FRAME_WIDTH-40)
     end
 end
 
@@ -1236,11 +1200,11 @@ function display_tooltip(self, key, owner)
         local detailed_data = self.db.global.searchDataTable[key]
         if detailed_data then
             if detailed_data['tooltipItemString'] then
-                GameTooltip:SetOwner(owner, nil, -40)
+                GameTooltip:SetOwner(owner, "ANCHOR_BOTTOMLEFT", -20, 15)
                 GameTooltip:SetHyperlink(detailed_data['tooltipItemString'])
                 GameTooltip:Show()
             elseif detailed_data['tooltipText'] then
-                GameTooltip:SetOwner(owner, nil, -40)
+                GameTooltip:SetOwner(owner, "ANCHOR_BOTTOMLEFT", -20, 15)
                 GameTooltip:SetText(detailed_data['tooltipText'], nil, nil, nil, nil, true)
                 GameTooltip:Show()
             else
@@ -1488,12 +1452,14 @@ function fill_search_data_table(self)
                 table.insert(toyList, itemId)
             end
         end
-
+        local counter = 0
         for i, id in pairs(toyList) do
-            if (PlayerHasToy(id) and C_ToyBox.IsToyUsable(id)) then
+            if (PlayerHasToy(id)) then
                 local itemId, toyName, icon = C_ToyBox.GetToyInfo(id)
                 local spellString = item_link_to_string(C_ToyBox.GetToyLink(id))
+                
                 if toyName ~= nil then
+                    counter = counter+1
                   db_search[toyName] = {
                       slash_cmd="/usetoy "..toyName,
                       icon = icon,
@@ -1501,8 +1467,10 @@ function fill_search_data_table(self)
                       type = SearchIndexType.TOY
                   }
                 end
+                
             end
         end
+        dprint(self, "Toys added: " .. counter)
     end
 
     --[=====[ EQUIPMENT SETS --]=====]
@@ -1553,12 +1521,7 @@ function fill_search_data_table(self)
     dprint(self, enabled)
     dprint(self, disabled)
 
-    local keybindings_list = {}
-    for k,_ in pairs(merge_keybindings(self)) do
-        table.insert(keybindings_list, k)
-    end
-
-    dprint(self, L["INDEX_FOOTER"](table.concat(keybindings_list, '+')))
+    --dprint(self, L["INDEX_FOOTER"](GetBindingKey("KL_LAUNCH")..""))
 end
 
 function add_many(self, type, tables)
@@ -1575,4 +1538,172 @@ function add_one(self, type, data)
         end
         self.db.global.searchDataTable[data[1]] = { slash_cmd=data[2], tooltipText=data[3], type=type}
     end
+end
+
+
+local AceGUI = LibStub("AceGUI-3.0")
+do
+	local Type = "KeystrokeLauncherWindow"
+	local Version = 1
+
+	local function frameOnClose(this)
+		this.obj:Fire("OnClose")
+	end
+	
+	local function closeOnClick(this)
+		this.obj:Hide()
+	end
+	
+	local function frameOnMouseDown(this)
+		AceGUI:ClearFocus()
+	end
+	
+	local function titleOnMouseDown(this)
+		this:GetParent():StartMoving()
+		AceGUI:ClearFocus()
+	end
+	
+	local function frameOnMouseUp(this)
+		local frame = this:GetParent()
+		frame:StopMovingOrSizing()
+		local self = frame.obj
+		local status = self.status or self.localstatus
+		status.width = frame:GetWidth()
+		status.height = frame:GetHeight()
+		status.top = frame:GetTop()
+		status.left = frame:GetLeft()
+	end
+
+	local function SetTitle(self,title)
+		self.titletext:SetText(title)
+	end
+	
+	local function SetStatusText(self,text)
+		-- self.statustext:SetText(text)
+	end
+	
+	local function Hide(self)
+		self.frame:Hide()
+	end
+	
+	local function Show(self)
+		self.frame:Show()
+	end
+	
+	local function OnAcquire(self)
+		self.frame:SetParent(UIParent)
+		self.frame:SetFrameStrata("FULLSCREEN_DIALOG")
+		self:ApplyStatus()
+		self:EnableResize(true)
+		self:Show()
+	end
+	
+	local function OnRelease(self)
+		self.status = nil
+		for k in pairs(self.localstatus) do
+			self.localstatus[k] = nil
+		end
+	end
+	
+	-- called to set an external table to store status in
+	local function SetStatusTable(self, status)
+		assert(type(status) == "table")
+		self.status = status
+		self:ApplyStatus()
+	end
+	
+	local function ApplyStatus(self)
+		local status = self.status or self.localstatus
+		local frame = self.frame
+		self:SetWidth(status.width or 700)
+		self:SetHeight(status.height or 500)
+		if status.top and status.left then
+			frame:SetPoint("TOP",UIParent,"BOTTOM",0,status.top)
+			frame:SetPoint("LEFT",UIParent,"LEFT",status.left,0)
+		else
+			frame:SetPoint("TOP",UIParent,"TOP",0,-GetScreenHeight()*.3)
+		end
+	end
+	
+	local function OnWidthSet(self, width)
+		local content = self.content
+		local contentwidth = width - 34
+		if contentwidth < 0 then
+			contentwidth = 0
+		end
+		content:SetWidth(contentwidth)
+		content.width = contentwidth
+	end
+	
+	
+	local function OnHeightSet(self, height)
+		local content = self.content
+		local contentheight = height - 57
+		if contentheight < 0 then
+			contentheight = 0
+		end
+		content:SetHeight(contentheight)
+		content.height = contentheight
+	end
+	
+	local function EnableResize(self, state)
+		local func = state and "Show" or "Hide"
+	end
+	
+	local function Constructor()
+		local frame = CreateFrame("Frame",nil,UIParent,"BackdropTemplate")
+		local self = {}
+		self.type = "KeystrokeLauncherWindow"
+		
+		self.Hide = Hide
+		self.Show = Show
+		self.SetTitle =  SetTitle
+		self.OnRelease = OnRelease
+		self.OnAcquire = OnAcquire
+		self.SetStatusText = SetStatusText
+		self.SetStatusTable = SetStatusTable
+		self.ApplyStatus = ApplyStatus
+		self.OnWidthSet = OnWidthSet
+		self.OnHeightSet = OnHeightSet
+		self.EnableResize = EnableResize
+		
+		self.localstatus = {}
+		
+		self.frame = frame
+		frame.obj = self
+		frame:SetWidth(700)
+		frame:SetHeight(500)
+		frame:SetPoint("TOP",UIParent,"TOP",0,-GetScreenHeight()*.3)
+		frame:EnableMouse()
+		frame:SetMovable(true)
+		frame:SetFrameStrata("FULLSCREEN_DIALOG")
+		frame:SetScript("OnMouseDown", frameOnMouseDown)
+		
+		frame:SetScript("OnHide",frameOnClose)
+		--frame:SetMinResize(240,240)
+		frame:SetToplevel(true)
+
+        frame:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", tile = false, tileSize = 1, edgeSize = 10, insets = { left = 1, right = 1, top = 1, bottom = 1 }});
+        frame:SetBackdropColor(0, 0, 0, .75);
+        frame:SetBackdropBorderColor(1, 1, 1, .75)
+		
+        -- close button
+        local close = CreateFrame("Button", "closeButton", frame, "Todo_CloseButton");
+        close:SetPoint("TOPRIGHT", -10, -9);
+        close:SetScript("OnClick", closeOnClick);
+        self.closebutton = close
+		close.obj = self
+	
+		--Container Support
+		local content = CreateFrame("Frame",nil,frame)
+		self.content = content
+		content.obj = self
+		content:SetPoint("TOPLEFT",frame,"TOPLEFT",12, -7)
+		content:SetPoint("BOTTOMRIGHT",frame,"BOTTOMRIGHT", -12,12)
+		
+		AceGUI:RegisterAsContainer(self)
+		return self	
+	end
+	
+	AceGUI:RegisterWidgetType(Type,Constructor,Version)
 end

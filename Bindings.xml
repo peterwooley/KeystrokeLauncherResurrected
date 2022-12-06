@@ -1,0 +1,10 @@
+<!-- *******************/ BINDINGS FILE /********************** -->
+
+<!-- Show/Hide the list binding -->
+<Bindings>
+  <Binding name="KL_LAUNCH" runOnUp="true" header="KL" category="ADDONS">
+    if ( keystate == "up" ) then
+      KeystrokeLauncher:Start();
+    end
+  </Binding>
+</Bindings>
