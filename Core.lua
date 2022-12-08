@@ -1688,7 +1688,7 @@ do
         frame:SetBackdropBorderColor(1, 1, 1, .75)
 		
         -- close button
-        local close = CreateFrame("Button", "closeButton", frame, "Todo_CloseButton");
+        local close = CreateFrame("Button", "closeButton", frame, "KLR_CloseButton");
         close:SetPoint("TOPRIGHT", -10, -9);
         close:SetScript("OnClick", closeOnClick);
         self.closebutton = close
