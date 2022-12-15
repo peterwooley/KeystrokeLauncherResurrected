@@ -223,7 +223,8 @@ function KeystrokeLauncher:OnInitialize()
                         desc = L['CONFIG_LOOK_N_FEEL_SCALE_DESC'],
                         type = "range",
                         min = 1,
-                        max = 1.5,
+                        max = 2.5,
+                        softMax = 1.5,
                         step = 0.1,
                         set = function(_, val) self.db.global.kl['scale'] = val end,
                         get = function() return self.db.global.kl['scale'] end
