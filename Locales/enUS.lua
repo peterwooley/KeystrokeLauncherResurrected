@@ -74,6 +74,8 @@ L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_NAME'] = 'Use Clickable Item Icons'
 L['CONFIG_LOOK_N_FEEL_SHOW_ACTION_ICONS_DESC'] = 'If enabled, you can execute the item by clicking on the icon. Disable to have smaller icons.'
 L['CONFIG_LOOK_N_FEEL_MAX_ITEMS_NAME'] = "Max Items per Page"
 L['CONFIG_LOOK_N_FEEL_MAX_ITEMS_DESC'] = "Controls how many lines the result window has. Default: 7."
+L['CONFIG_LOOK_N_FEEL_SCALE_NAME'] = "UI Scale"
+L['CONFIG_LOOK_N_FEEL_SCALE_DESC'] = "Controls the scale of the Keystroke Launcher window. Default: 1."
 L['CONFIG_LOOK_N_FEEL_SIZE'] = "UI Size Settings"
 
 --[=====[ CODE --]=====]

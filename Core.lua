@@ -88,6 +88,9 @@ function KeystrokeLauncher:OnInitialize()
     if self.db.global.kl['items_per_page'] == nil then
         self.db.global.kl['items_per_page'] = 7
     end
+    if self.db.global.kl['scale'] == nil then
+        self.db.global.kl['scale'] = 1
+    end
 
     --[=====[ FILL SEARCH DATA TABLE --]=====]
     if not SEARCH_TABLE_INIT_DONE then
@@ -213,6 +216,17 @@ function KeystrokeLauncher:OnInitialize()
                         step = 1,
                         set = function(_, val) self.db.global.kl['items_per_page'] = val end,
                         get = function() return self.db.global.kl['items_per_page'] end
+                    },
+                    window_scale = {
+                        order = 9,
+                        name = L['CONFIG_LOOK_N_FEEL_SCALE_NAME'],
+                        desc = L['CONFIG_LOOK_N_FEEL_SCALE_DESC'],
+                        type = "range",
+                        min = 1,
+                        max = 1.5,
+                        step = 0.1,
+                        set = function(_, val) self.db.global.kl['scale'] = val end,
+                        get = function() return self.db.global.kl['scale'] end
                     },
                     -- experimental look n feel switches
                     header_experimental = {
@@ -500,8 +514,10 @@ function show_main_frame(self)
             self:Print(get_mem_usage())
         end
     end)
+
     KL_MAIN_FRAME:SetLayout("Flow")
     KL_MAIN_FRAME:SetWidth(KL_MAIN_FRAME_WIDTH)
+    KL_MAIN_FRAME.frame:SetScale(self.db.global.kl['scale'])
     KL_MAIN_FRAME.frame:SetPropagateKeyboardInput(false)
     KL_MAIN_FRAME.frame:SetScript("OnKeyDown", function(widget, keyboard_key)
         SEARCH_EDITBOX:SetFocus()
@@ -602,6 +618,7 @@ function show_main_frame(self)
     ITEMS_GROUP.frame:SetPropagateKeyboardInput(true)
 
     KL_MAIN_FRAME:AddChild(ITEMS_GROUP)
+
     KL_MAIN_FRAME:Show()
 end
 
@@ -1587,13 +1604,13 @@ do
 	end
 	
 	local function Show(self)
+        self.frame:SetPoint("TOP",UIParent,"TOP",0,-GetScreenHeight()*.3/self.frame:GetScale())
 		self.frame:Show()
 	end
 	
 	local function OnAcquire(self)
 		self.frame:SetParent(UIParent)
 		self.frame:SetFrameStrata("FULLSCREEN_DIALOG")
-		self:ApplyStatus()
 		self:EnableResize(true)
 		self:Show()
 	end
@@ -1609,20 +1626,6 @@ do
 	local function SetStatusTable(self, status)
 		assert(type(status) == "table")
 		self.status = status
-		self:ApplyStatus()
-	end
-	
-	local function ApplyStatus(self)
-		local status = self.status or self.localstatus
-		local frame = self.frame
-		self:SetWidth(status.width or 700)
-		self:SetHeight(status.height or 500)
-		if status.top and status.left then
-			frame:SetPoint("TOP",UIParent,"BOTTOM",0,status.top)
-			frame:SetPoint("LEFT",UIParent,"LEFT",status.left,0)
-		else
-			frame:SetPoint("TOP",UIParent,"TOP",0,-GetScreenHeight()*.3)
-		end
 	end
 	
 	local function OnWidthSet(self, width)
@@ -1651,7 +1654,8 @@ do
 	end
 	
 	local function Constructor()
-		local frame = CreateFrame("Frame",nil,UIParent,"BackdropTemplate")
+		local frame = CreateFrame("Frame","KeystrokeLauncherWindow",UIParent,"BackdropTemplate")
+		
 		local self = {}
 		self.type = "KeystrokeLauncherWindow"
 		
@@ -1662,7 +1666,6 @@ do
 		self.OnAcquire = OnAcquire
 		self.SetStatusText = SetStatusText
 		self.SetStatusTable = SetStatusTable
-		self.ApplyStatus = ApplyStatus
 		self.OnWidthSet = OnWidthSet
 		self.OnHeightSet = OnHeightSet
 		self.EnableResize = EnableResize
@@ -1673,14 +1676,13 @@ do
 		frame.obj = self
 		frame:SetWidth(700)
 		frame:SetHeight(500)
-		frame:SetPoint("TOP",UIParent,"TOP",0,-GetScreenHeight()*.3)
 		frame:EnableMouse()
 		frame:SetMovable(true)
 		frame:SetFrameStrata("FULLSCREEN_DIALOG")
 		frame:SetScript("OnMouseDown", frameOnMouseDown)
 		
-		frame:SetScript("OnHide",frameOnClose)
-		--frame:SetMinResize(240,240)
+        
+        frame:SetScript("OnHide",frameOnClose)
 		frame:SetToplevel(true)
 
         frame:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", tile = false, tileSize = 1, edgeSize = 10, insets = { left = 1, right = 1, top = 1, bottom = 1 }});
