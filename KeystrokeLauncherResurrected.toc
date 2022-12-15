@@ -2,7 +2,7 @@
 ## Title: Keystroke Launcher Resurrected
 ## Notes: A Spotlight-like launcher for mounts, toys, macros, spells, addons, and items.
 ## Author: Peter Wooley <peterwooley@gmail.com>
-## Version: 3.0.1
+## Version: 3.1.0
 ## SavedVariables: KeystrokeLauncherResurrectedDB
 
 embeds.xml
