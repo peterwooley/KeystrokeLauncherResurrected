@@ -1,4 +1,4 @@
-## Interface: 100105
+## Interface: 100107
 ## Title: Keystroke Launcher Resurrected
 ## Notes: A Spotlight-like launcher for mounts, toys, macros, spells, addons, and items.
 ## Author: Peter Wooley <peterwooley@gmail.com>
