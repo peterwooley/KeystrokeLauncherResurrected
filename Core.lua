@@ -475,6 +475,16 @@ end
 
 -- window start up logic
 function start(self, filter)
+
+    -- Ignore startup if in an ignorable state (Dragonriding, etc.)
+    if IsFlying() and IsAdvancedFlyableArea() then
+        dprint(self, "Ignorning KL Hotkey as you're Dragonriding.")
+
+        -- If the KL UI is still open, hide it to ensure it doesn't get stuck open
+        hide_all()
+        return false
+    end
+
     set_main_frame_size(self)
     show_main_frame(self)
     SEARCH_EDITBOX:SetText(filter)
