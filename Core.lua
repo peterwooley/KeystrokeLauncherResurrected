@@ -1393,11 +1393,11 @@ function fill_search_data_table(self)
                 do break end
             end
             if IsUsableSpell(spellName) then
-                if not IsPassiveSpell(spellName) then
-                    local spellString = item_link_to_string(GetSpellLink(spellName))
+                if not C_Spell.IsSpellPassive(spellName) then
+                    local spellString = item_link_to_string(C_Spell.GetSpellLink(spellName))
                     db_search[spellName] = {
                         slash_cmd="/cast "..spellName,
-                        icon = GetSpellTexture(spellName),
+                        icon = C_Spell.GetSpellTexture(spellName),
                         tooltipItemString=spellString,
                         type=SearchIndexType.SPELL,
                         spell_name=spellName
@@ -1452,7 +1452,7 @@ function fill_search_data_table(self)
     if self.db.global.searchDataWhatIndex[SearchIndexType.MOUNT] then
         for i=1, C_MountJournal.GetNumDisplayedMounts() do
             local creatureName, spellID, icon, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetDisplayedMountInfo(i)
-            local spellString, spellname = item_link_to_string(GetSpellLink(spellID))
+            local spellString, spellname = item_link_to_string(C_Spell.GetSpellLink(spellID))
             if isCollected then
                 db_search[creatureName] = {
                     slash_cmd="/cast "..spellname,
