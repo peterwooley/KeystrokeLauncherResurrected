@@ -1388,11 +1388,11 @@ function fill_search_data_table(self)
     if self.db.global.searchDataWhatIndex[SearchIndexType.SPELL] then
         local i = 1
         while true do
-            local spellName = GetSpellBookItemName(i, BOOKTYPE_SPELL)
+            local spellName = C_SpellBook.GetSpellBookItemName(i, Enum.SpellBookSpellBank.Player)
             if not spellName then
                 do break end
             end
-            if IsUsableSpell(spellName) then
+            if C_Spell.IsSpellUsable(spellName) then
                 if not C_Spell.IsSpellPassive(spellName) then
                     local spellString = item_link_to_string(C_Spell.GetSpellLink(spellName))
                     db_search[spellName] = {
@@ -1434,10 +1434,10 @@ function fill_search_data_table(self)
                 local itemLink = C_Container.GetContainerItemLink(bag, bagSlots)
                 if itemLink then
                     local itemString, itemName, itemId = item_link_to_string(itemLink)
-                    if IsUsableItem(itemName) then
+                    if C_Item.IsUsableItem(itemName) then
                         db_search[itemName] = {
                             slash_cmd="/use "..itemName,
-                            icon = GetItemIcon(itemName),
+                            icon = C_Item.GetItemIconByID(itemName),
                             tooltipItemString=itemString,
                             type=SearchIndexType.ITEM,
                             item_id=itemId
