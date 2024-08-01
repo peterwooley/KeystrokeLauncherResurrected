@@ -420,6 +420,7 @@ function KeystrokeLauncher:OnInitialize()
     KEYBOARD_LISTENER_FRAME = CreateFrame("Frame", "KeyboardListener", UIParent);
 
     KEYBOARD_LISTENER_FRAME:RegisterEvent("PLAYER_LOGIN")
+    KEYBOARD_LISTENER_FRAME:RegisterEvent("NEW_MOUNT_ADDED")
     KEYBOARD_LISTENER_FRAME:SetScript("OnEvent", function(_, event, ...)
         if(event == "PLAYER_LOGIN") then
             -- Set default key binding if no keys are currently bound
@@ -447,6 +448,9 @@ function KeystrokeLauncher:OnInitialize()
                 SaveBindings(GetCurrentBindingSet())
             end
             
+        elseif (event == "NEW_MOUNT_ADDED") then
+            local mountID = ...
+            add_mount(self, mountID)
         end
     end)
 end
@@ -1566,6 +1570,21 @@ function add_one(self, type, data)
         end
         self.db.global.searchDataTable[data[1]] = { slash_cmd=data[2], tooltipText=data[3], type=type}
     end
+end
+
+function add_mount(self, mountID)
+    local db_search = self.db.global.searchDataTable
+    local creatureName, spellID, icon = C_MountJournal.GetMountInfoByID(mountID)
+    local spellString, spellname = item_link_to_string(C_Spell.GetSpellLink(spellID))
+    
+    dprint(self, "Adding new mount: " .. creatureName)
+
+    db_search[creatureName] = {
+        slash_cmd = "/cast " .. spellname,
+        icon = icon,
+        tooltipItemString = spellString,
+        type = SearchIndexType.MOUNT
+    }
 end
 
 
