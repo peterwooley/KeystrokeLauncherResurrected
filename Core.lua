@@ -284,7 +284,7 @@ function KeystrokeLauncher:OnInitialize()
                             if key2 then SetBinding(key2) end
 
                             -- and finally we set the new binding key
-                            if (newKey ~= '') then -- considering we pressed one (not ESC)
+                            if (val ~= '') then -- considering we pressed one (not ESC)
                                 SetBinding(val, "KL_LAUNCH"); 
                             end
                             SaveBindings(GetCurrentBindingSet())
@@ -447,7 +447,7 @@ function KeystrokeLauncher:OnInitialize()
 
                 SaveBindings(GetCurrentBindingSet())
             end
-            
+
         elseif (event == "NEW_MOUNT_ADDED") then
             local mountID = ...
             add_mount(self, mountID)
@@ -573,7 +573,6 @@ function show_main_frame(self)
             reload_main_frame(self)
         end)
         KL_MAIN_FRAME:AddChild(edit_mode_checkbox)
-        --heights = heights + edit_mode_checkbox.frame:GetHeight()
     end
 
     --[=====[ SEARCH TYPES CHECKBOXES --]=====]
@@ -647,49 +646,42 @@ function show_edit_header(self)
     local f = AceGUI:Create("Label")
     f:SetWidth(30)
     f:SetText('#')
-    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
     f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(40)
     f:SetText('Freq.')
-    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
     f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(150)
     f:SetText('Key')
-    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
     f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(180)
     f:SetText('Slash Command')
-    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
     f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(130)
     f:SetText('Tooltip Text')
-   -- f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
    f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(120)
     f:SetText('Tooltip ItemString')
-    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
     f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
     f = AceGUI:Create("Label")
     f:SetWidth(130)
     f:SetText('Category')
-    --f:SetFont("Fonts\\FRIZQT__.TTF", font_size)
     f:SetFontObject("GameFontNormal")
     EDIT_HEADER:AddChild(f)
 
@@ -1327,12 +1319,12 @@ function fill_search_data_table(self)
 
     --[=====[ ADDON --]=====]
     if self.db.global.searchDataWhatIndex[SearchIndexType.ADDON] then
-        for i=1, GetNumAddOns() do
-            local name, title, notes, addonenabled = GetAddOnInfo(i)
+        for i=1, C_AddOns.GetNumAddOns() do
+            local name, title, notes, addonenabled = C_AddOns.GetAddOnInfo(i)
             if notes == nil then
                 notes = ''
             end
-            if addonenabled and IsAddOnLoaded(i) then
+            if addonenabled and C_AddOns.IsAddOnLoaded(i) then
                 local slash_cmd = '/'..name:lower()
                 -- only add if slash command exists
                 if slash_cmd_exists(slash_cmd) then
