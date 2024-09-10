@@ -1,4 +1,4 @@
-## Interface: 110002
+## Interface: 110005
 ## Title: Keystroke Launcher Resurrected
 ## Notes: A Spotlight-like launcher for mounts, toys, macros, spells, addons, and items.
 ## IconTexture: Interface\AddOns\KeystrokeLauncherResurrected\icon.png
