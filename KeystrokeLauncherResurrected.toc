@@ -3,7 +3,7 @@
 ## Notes: A Spotlight-like launcher for mounts, toys, macros, spells, addons, and items.
 ## IconTexture: Interface\AddOns\KeystrokeLauncherResurrected\icon.png
 ## Author: Peter Wooley <peterwooley@gmail.com>
-## Version: 3.2.5
+## Version: 3.2.6
 ## SavedVariables: KeystrokeLauncherResurrectedDB
 
 embeds.xml
