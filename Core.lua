@@ -1040,7 +1040,9 @@ function update_top_macros(self)
 end
 
 function hide_all()
-    KL_MAIN_FRAME:Hide()
+    if KL_MAIN_FRAME then
+        KL_MAIN_FRAME:Hide()
+    end
     GameTooltip:Hide()
 end
 
