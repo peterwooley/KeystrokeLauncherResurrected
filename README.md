@@ -46,11 +46,10 @@ If you were using Keystroke Launcher Resurrected before version 3, your existing
 
 ## Gotchas & Known Issues
 
-* Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with a diffent slash commands.
+* Addons are executed as `/(addon name in lower case)`, therefore will not work for addons with different slash commands.
 
 ## Credits
-Current Author: Peter Wooley <peterwooley@gmail.com>
-
-Forked and expanded from [endymonium's terrific keystrokelauncher add-on](https://github.com/endymonium/keystrokelauncher)
-
-Idea based on the awesome keystroke launcher for Windows [Keyperinha](http://keypirinha.com/). Does not work in combat, due to Blizzard API limiations. Needs one free slot in the "General" macro tab.
+* Current Author: Peter Wooley <peterwooley@gmail.com>
+* Forked and expanded from [endymonium's terrific keystrokelauncher add-on](https://github.com/endymonium/keystrokelauncher)
+* Idea based on the awesome keystroke launcher for Windows [Keyperinha](http://keypirinha.com/). Does not work in combat, due to Blizzard API limitations. Needs one free slot in the "General" macro tab.
+* Russian translation added by [Hubbotu](https://github.com/Hubbotu)
